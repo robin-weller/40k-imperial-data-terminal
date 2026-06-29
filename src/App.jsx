@@ -1,12 +1,51 @@
+import { useState, useEffect } from 'react'
+import HolyTextScroll from './HolyTextScroll'
+
 function App() {
+  const [showAnimation, setShowAnimation] = useState(true)
+  const [isFlickering, setIsFlickering] = useState(false)
+
+  useEffect(() => {
+    if (showAnimation) {
+      // Animation plays for 5 seconds
+      const animationTimer = setTimeout(() => {
+        setIsFlickering(true)
+      }, 5000)
+
+      return () => clearTimeout(animationTimer)
+    }
+  }, [showAnimation])
+
+  useEffect(() => {
+    if (isFlickering) {
+      // Flicker for 1 second then switch to home screen
+      const flickerTimer = setTimeout(() => {
+        setShowAnimation(false)
+        setIsFlickering(false)
+      }, 1000)
+
+      return () => clearTimeout(flickerTimer)
+    }
+  }, [isFlickering])
+
+  if (showAnimation) {
+    return (
+      <div className={`min-h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4 ${isFlickering ? 'animate-flicker-screen' : ''}`}>
+        <div className="flex-1">
+          <HolyTextScroll />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4">
       {/* Outer terminal border */}
       <div className="flex-1 border-2 border-[#39ff14] flex flex-col shadow-[0_0_20px_#39ff14]">
 
         {/* ── HEADER ── */}
-        <header className="border-b-2 border-[#39ff14] px-6 py-3 flex items-center justify-between bg-[#0d220d]">
-          <div className="terminal-glow text-lg tracking-[0.3em] uppercase font-bold">
+        <header className="border-b-2 border-[#39ff14] px-3 md:px-6 py-2 md:py-3 flex flex-col md:flex-row items-start md:items-center justify-between bg-[#0d220d] gap-2 md:gap-0">
+          <div className="terminal-glow text-base md:text-lg tracking-[0.3em] uppercase font-bold">
             ⬡ Imperial Data Terminal
           </div>
           <div className="text-xs tracking-widest text-[#166534] terminal-glow-sm">
@@ -17,8 +56,8 @@ function App() {
         {/* ── MAIN LAYOUT: nav + content ── */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* ── LEFT NAV ── */}
-          <nav className="w-52 flex-shrink-0 border-r-2 border-[#39ff14] bg-[#0d220d] flex flex-col">
+          {/* ── LEFT NAV (hidden on mobile) ── */}
+          <nav className="hidden md:flex w-52 flex-shrink-0 border-r-2 border-[#39ff14] bg-[#0d220d] flex-col">
             <div className="border-b border-[#166534] px-4 py-2 text-xs tracking-[0.2em] text-[#166534] uppercase">
               Navigation
             </div>
@@ -52,7 +91,7 @@ function App() {
           <main className="flex-1 flex flex-col overflow-auto bg-[#0a1a0a]">
 
             {/* Sub-navigation / panel tabs */}
-            <div className="border-b border-[#166534] flex text-xs tracking-widest">
+            <div className="border-b border-[#166534] flex text-xs tracking-widest overflow-x-auto">
               <TabButton label="Planet Records" active />
               <TabButton label="Fleet Registry" />
               <TabButton label="Threat Assessment" />
@@ -61,7 +100,7 @@ function App() {
             </div>
 
             {/* Data panels */}
-            <div className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex-1 p-3 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 overflow-auto">
 
               <DataPanel title="▸ Planet Information">
                 <DataRow label="Designation" value="Armageddon Prime" />
@@ -101,12 +140,12 @@ function App() {
         </div>
 
         {/* ── STATUS BAR ── */}
-        <footer className="border-t-2 border-[#39ff14] px-6 py-2 flex justify-between items-center bg-[#0d220d] text-xs tracking-widest">
+        <footer className="border-t-2 border-[#39ff14] px-2 md:px-6 py-1 md:py-2 flex flex-col md:flex-row justify-between items-start md:items-center bg-[#0d220d] text-xs tracking-widest gap-1 md:gap-0">
           <div className="terminal-glow-sm">
             <span className="text-[#39ff14]">■</span>{' '}
             STATUS: <span className="terminal-glow">ONLINE</span>
           </div>
-          <div className="text-[#166534]">
+          <div className="text-[#166534] text-xs">
             TERRA — 999.M42 — CYCLE 7734
           </div>
           <div className="terminal-glow-sm">

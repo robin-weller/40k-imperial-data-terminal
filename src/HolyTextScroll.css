@@ -1,0 +1,97 @@
+.holy-text-container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0a1a0a 0%, #0d220d 50%, #0a1a0a 100%);
+  border: 2px solid #39ff14;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 
+    0 0 20px #39ff14,
+    inset 0 0 10px rgba(57, 255, 20, 0.1);
+  animation: scrollDown 5s linear 1;
+}
+
+.holy-text-scroll {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  color: #39ff14;
+  font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+  line-height: 1.6;
+  white-space: pre;
+  letter-spacing: 0.05em;
+  padding: clamp(10px, 5vw, 20px);
+  animation: dataCorruption 3s ease-in-out infinite, flicker 0.15s infinite;
+  text-shadow: 
+    0 0 4px #39ff14,
+    0 0 8px rgba(57, 255, 20, 0.5);
+}
+
+@keyframes scrollDown {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes typeReveal {
+  0% {
+    max-height: 0;
+  }
+  100% {
+    max-height: 10000px;
+  }
+}
+
+/* Scanline effect overlay */
+.holy-text-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  z-index: 1;
+}
+
+/* Subtle flicker effect */
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  5%, 10%, 15%, 20%, 25% {
+    opacity: 0.98;
+  }
+  50% {
+    opacity: 0.99;
+  }
+}
+
+/* Glitch-style text corruption effect */
+@keyframes dataCorruption {
+  0%, 100% {
+    text-shadow: 
+      0 0 4px #39ff14,
+      0 0 8px rgba(57, 255, 20, 0.5);
+  }
+  50% {
+    text-shadow: 
+      0 0 4px #39ff14,
+      0 0 12px rgba(57, 255, 20, 0.8),
+      2px 0px #ff0000,
+      -2px 0px #00ff00;
+  }
+}

@@ -51,3 +51,45 @@ body::after {
 .terminal-glow-sm {
   text-shadow: 0 0 4px #39ff14;
 }
+
+/* Screen flicker animation for transition effect */
+@keyframes flicker-screen {
+  0%, 100% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  20% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  60% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.4;
+  }
+  80% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.2;
+  }
+}
+
+.animate-flicker-screen {
+  animation: flicker-screen 1s ease-in-out infinite;
+}
+
+.terminal-glow-sm {
+  text-shadow: 0 0 4px #39ff14;
+}
