@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pipboy-green: #39ff14;
+  --color-pipboy-dark: #0a1a0a;
+  --color-pipboy-mid: #1a2e1a;
+  --color-pipboy-border: #4ade80;
+  --color-pipboy-dim: #166534;
+  --font-terminal: 'Share Tech Mono', 'Courier New', Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #0a1a0a;
+  color: #39ff14;
+  font-family: 'Share Tech Mono', 'Courier New', Courier, monospace;
+}
+
+/* CRT scanline overlay effect */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  z-index: 9999;
+}
+
+/* Subtle text glow for the terminal feel */
+.terminal-glow {
+  text-shadow: 0 0 8px #39ff14, 0 0 2px #39ff14;
+}
+
+.terminal-glow-sm {
+  text-shadow: 0 0 4px #39ff14;
+}
