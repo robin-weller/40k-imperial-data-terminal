@@ -14,6 +14,11 @@ function App() {
     { id: 1, sender: 'AI_COMMAND', text: 'COMMAND ASSISTANCE ONLINE — AWAITING ORDERS', timestamp: '00:00' }
   ])
   const [chatInput, setChatInput] = useState('')
+  const [servoSkullQuery, setServoSkullQuery] = useState('')
+  const [servoSkullResults, setServoSkullResults] = useState(null)
+  const [servoSkullSearchHistory, setServoSkullSearchHistory] = useState([])
+  const [servoSkullLoading, setServoSkullLoading] = useState(false)
+  const [puritySeals, setPuritySeals] = useState([])
 
   useEffect(() => {
     if (showAnimation) {
@@ -76,6 +81,281 @@ function App() {
       }
       setChatMessages(prev => [...prev, aiMsg])
     }, 500)
+  }
+
+  const speakResponse = (text) => {
+    // Stop any existing speech
+    window.speechSynthesis.cancel()
+    
+    // Create utterance
+    const utterance = new SpeechSynthesisUtterance(text)
+    
+    // Set voice properties for SERVO SKULL sound - mechanical, distorted, mechanical chirping
+    utterance.rate = 0.65 // Much slower, very robotic and mechanical
+    utterance.pitch = 1.8 // VERY HIGH PITCHED - like a distorted servo skull
+    utterance.volume = 0.9
+    
+    // Try to use a computer/robotic voice if available
+    const voices = window.speechSynthesis.getVoices()
+    const roboticVoice = voices.find(v => 
+      v.name.includes('Google UK') || 
+      v.name.includes('Microsoft Zira') || 
+      v.name.includes('Samantha') ||
+      v.name.includes('moira') ||
+      v.name.includes('Victoria') ||
+      v.name.includes('Computer') ||
+      v.name.includes('Robot')
+    )
+    
+    if (roboticVoice) {
+      utterance.voice = roboticVoice
+    } else {
+      // Fallback to any available voice
+      const anyVoice = voices.find(v => v.name.length > 0)
+      if (anyVoice) {
+        utterance.voice = anyVoice
+      }
+    }
+    
+    // Add visual glitch effect when servo skull speaks
+    const chatContainer = document.querySelector('[data-chat-container]')
+    if (chatContainer) {
+      chatContainer.style.animation = 'camGlitch 0.3s infinite'
+      
+      utterance.onend = () => {
+        chatContainer.style.animation = 'none'
+      }
+    }
+    
+    // Speak the response
+    window.speechSynthesis.speak(utterance)
+  }
+
+  // Servo Skull Knowledge Base
+  const servoSkullKnowledgeBase = {
+    'space marines': {
+      title: 'SPACE MARINES — HUMANITY\'S FINEST',
+      content: 'The Space Marines are the genetically-enhanced super-soldiers of the Imperium. Created from the geneseed of the Primarchs, each Marine stands 7-8 feet tall and possesses enhanced strength, reflexes, and durability. They are organized into Chapters of approximately 1,000 warriors, each led by a Chapter Master. Equipped with Power Armor, Bolters, and advanced weaponry, they are deployed across the galaxy to defend Imperial worlds.'
+    },
+    'chaos': {
+      title: 'CHAOS — THE ENEMY WITHIN',
+      content: 'Chaos represents the corrupting forces of the Warp—the realm of the Dark Gods: Khorne (War), Nurgle (Death), Tzeentch (Change), and Slaanesh (Excess). Those who fall to Chaos become twisted, corrupted abominations. Chaos forces threaten the Imperium from within and without, with Chaos Space Marines serving as the primary military threat. The Emperor\'s light is the only defense against this darkness.'
+    },
+    'adeptus mechanicus': {
+      title: 'ADEPTUS MECHANICUS — THE MACHINE GOD\'S SERVANTS',
+      content: 'The Adeptus Mechanicus is a techno-religious order that worships the Omnissiah (Machine God). They maintain and produce the Imperium\'s technology, guarding sacred knowledge and manufacturing weapons of war. Tech-Priests combine flesh with machine, becoming more mechanical than human. They control vast Forge Worlds and are essential to the Imperium\'s survival.'
+    },
+    'emperor': {
+      title: 'THE EMPEROR OF MANKIND — THE MASTER OF MANKIND',
+      content: 'The Emperor is the divine ruler of the Imperium, locked in eternal meditation upon the Golden Throne for 10,000 years. Though His body is failing, His psychic presence guides the Astronomican—a beacon that allows Imperial ships to navigate the Warp. He is worshipped as a god, and His will is absolute. The Emperor\'s light endures eternal.'
+    },
+    'ork': {
+      title: 'ORKS — THE GREEN TIDE',
+      content: 'Orks are crude, brutish xenos driven by an insatiable desire for war and violence. Operating in massive tribal structures called Waaaghs, Orks are unpredictable but incredibly dangerous in large numbers. They possess regenerative abilities and incredible durability. A Waaagh led by a powerful Warboss can threaten entire sectors of Imperial space. They must be exterminated without mercy.'
+    },
+    'inquisition': {
+      title: 'INQUISITION — THE HAMMER OF FAITH',
+      content: 'The Inquisition maintains the purity of the Imperium through surveillance, interrogation, and execution of heretics. Inquisitors possess near-absolute authority and answer only to the High Lords of Terra. They hunt psykers, investigate xenos threats, combat Chaos corruption, and eliminate anyone deemed a threat to Imperial stability. An Inquisitor\'s word is law.'
+    },
+    'imperial guard': {
+      title: 'IMPERIAL GUARD — THE HAMMER OF THE EMPEROR',
+      content: 'The Imperial Guard are humanity\'s primary military force—countless billions of soldiers armed with las-weapons and trained in the art of war. While individually inferior to Space Marines, they make up for this through sheer numbers and disciplined tactics. Regiments from various worlds bring different combat doctrines and specialties. They are the bulwark of the Imperium.'
+    },
+    'tyranid': {
+      title: 'TYRANIDS — THE DEVOURER',
+      content: 'Tyranids are bio-engineered xenos organisms from beyond the galaxy, stripping worlds of all biomatter to fuel their endless expansion. Operating under a single hive consciousness, they are relentless, adaptive predators. A Tyranid invasion means total extinction of all life on a world. They represent one of the greatest existential threats to all life in the galaxy.'
+    },
+    'necron': {
+      title: 'NECRONS — THE ANCIENT ONES',
+      content: 'Necrons are ancient undead cyborgs who ruled the galaxy billions of years ago. Once organic beings, they transferred their consciousness into immortal metal bodies. Though many lie dormant in their Tomb Worlds, awakening Necrons are devastating—technologically superior to all current races. They are relentless and nearly impossible to permanently destroy.'
+    },
+    'warp': {
+      title: 'THE WARP — THE REALM OF CHAOS',
+      content: 'The Warp is an alternate dimension of pure psychic energy where logic and physics hold no sway. Faster-than-light travel requires navigation through the Warp. It is populated by entities of pure chaos and malice—Daemons that seek to corrupt and destroy. Psychic powers draw from Warp energy but risk daemon possession. The Warp is fundamentally hostile to reality.'
+    },
+    'geneseed': {
+      title: 'GENESEED — THE FOUNDATION OF MARINES',
+      content: 'Geneseed are genetic templates harvested from a deceased Space Marine\'s body, containing the genetic memory and mutations of their Primarch. These are implanted into neophyte Marines during the creation process. Each Chapter guards their Geneseed jealously as it defines their genetic legacy. The loss of Geneseed is considered catastrophic to a Chapter\'s future.'
+    },
+    'heresy': {
+      title: 'THE HORUS HERESY — THE FALL FROM GRACE',
+      content: 'The Horus Heresy was a devastating civil war 10,000 years ago when half the Space Marine Legions turned to Chaos. Led by Warmaster Horus, the traitor forces nearly destroyed the Imperium before the Emperor defeated them. However, the Emperor was mortally wounded and entombed on the Golden Throne. The Heresy shattered the Imperium and led to its current fractured state.'
+    },
+    'psyker': {
+      title: 'PSYKERS — BLESSED OR CURSED?',
+      content: 'Psykers are humans with psychic abilities drawn from the Warp. While invaluable for communication and combat, they risk daemon possession and corruption. The Imperium requires millions of psykers to fuel the Golden Throne and the Astronomican. Uncontrolled psykers are eliminated. Sanctioned psykers serve the Imperium, walking a razor\'s edge between power and damnation.'
+    },
+    'holy terra': {
+      title: 'HOLY TERRA — THE CRADLE OF HUMANITY',
+      content: 'Terra is the birthplace of humanity and seat of the Emperor. Beneath its surface lies countless hive-cities housing billions. Terra is the spiritual and literal center of the Imperium, where the High Lords make their decisions. The planet is defended by layer upon layer of orbital and ground defenses. Losing Terra would mean the end of human civilization.'
+    },
+    'eldar': {
+      title: 'ELDAR — THE DYING RACE',
+      content: 'Eldar are an ancient, graceful xenos race on the brink of extinction due to their dark past. While physically fragile compared to humans, they possess superior technology and agility. Eldar society is split between Craftworld Eldar (nomads), Dark Eldar/Drukhari (pleasure-seekers), and Exodites (seers). Some work with the Imperium out of necessity, but they are fundamentally alien.'
+    },
+    'primarch': {
+      title: 'PRIMARCHS — THE DEMIGODS OF WAR',
+      content: 'Primarchs are the genetically-engineered super-beings created by the Emperor to lead His Legions of Space Marines. Twenty Primarchs were created, each with unique abilities and vision. Half fell to Chaos during the Horus Heresy, while others were lost or killed. Those still living—like Roboute Guilliman—lead their Chapters into battle. They are amongst the most powerful warriors in the galaxy.'
+    },
+    'ultramarines': {
+      title: 'ULTRAMARINES — THE HAMMER OF THE IMPERIUM',
+      content: 'The Ultramarines are the most celebrated Space Marine Chapter, led by their Primarch Roboute Guilliman. Known for rigid discipline and perfect tactical formations, they follow the Codex Astartes to the letter. Chapter Master Marneus Calgar commands their forces with unwavering resolve. They stand as the golden standard by which all other Chapters are measured.'
+    },
+    'blood angels': {
+      title: 'BLOOD ANGELS — BEAUTY AND DARKNESS',
+      content: 'The Blood Angels are a noble Chapter whose warriors carry a terrible genetic flaw—the Black Rage and Red Thirst. In battle, they become frenzied killers, channeling primal rage and hunger for blood. Yet they remain paragons of honor and duty. Their distinctive red armor and gothic aesthetics mark them as warriors of beauty and damnation combined.'
+    },
+    'dark angels': {
+      title: 'DARK ANGELS — KEEPERS OF SECRETS',
+      content: 'The Dark Angels are shrouded in mystery, guarding ancient secrets of the pre-Heresy Dark Angels Legion. Organized into an inner circle of initiated members, they pursue their own agenda alongside Imperial objectives. Their Inner Circle consists of only the most trusted warriors. They hunt for relics, ancient technology, and hidden knowledge across the galaxy.'
+    },
+    'bolter': {
+      title: 'BOLTER — THE EMPEROR\'S WRATH',
+      content: 'The Bolter is the iconic weapon of the Imperium—a semi-automatic firearm that fires mass-reactive, explosive rounds. Effective at range and devastating in close quarters, Bolters are the standard armament for Space Marines. Various configurations exist: Heavy Bolters, Storm Bolters, and the mighty Assault Cannons. No weapon better symbolizes Imperial might.'
+    },
+    'power armor': {
+      title: 'POWER ARMOR — THE EXOSKELETON OF WAR',
+      content: 'Power Armor is a combat exoskeleton that enhances strength and durability, essential for Space Marines in battle. Different marks exist—from the ancient Mark VI to the more advanced Mark X. Power Armor can withstand weapons that would destroy conventional armor. A Marine in full Power Armor becomes a walking fortress of the Imperium.'
+    },
+    'terminator armor': {
+      title: 'TERMINATOR ARMOR — THE BULWARK ETERNAL',
+      content: 'Terminator Armor is heavy combat armor worn by elite Space Marines in the most brutal engagements. Thicker and heavier than standard Power Armor, it sacrifices mobility for near-impenetrable protection. Equipped with Storm Bolters or other heavy weaponry, Terminators are devastating anti-armor specialists. They are deployed only when victory is absolutely essential.'
+    },
+    'tau': {
+      title: 'TAU — THE ALIENS OFFERING UNITY',
+      content: 'The Tau are a technologically advanced xenos species who offer "Greater Good" ideology to those they encounter. While less religious and militaristic than the Imperium, they are skilled fighters and tacticians. Their Rail Guns and Pulse Rifles are devastatingly effective. Some view them as preferable allies to traditional xenos—though the Imperium views all xenos as threats.'
+    },
+    'grim dark': {
+      title: 'GRIM DARKNESS OF THE FAR FUTURE',
+      content: 'In the grim darkness of the far future, there is only war. The galaxy is a hostile place where countless civilizations fight for survival and supremacy. The Imperium clings to fading glory, the Orks revel in endless battle, Chaos corrupts all it touches, and countless other threats emerge from the void. Hope is a luxury in an age of eternal conflict.'
+    },
+    'cadia': {
+      title: 'CADIA — THE FORTRESS WORLD',
+      content: 'Cadia is a fortress world that stands as the primary defense against Chaos forces pouring from the Eye of Terror. Defended by the elite Cadian Shock Troops and the Cadian Gate orbital defenses, it has held for 10,000 years against impossible odds. The loss of Cadia would be catastrophic, leaving the Imperium open to invasion from the greatest threat.'
+    },
+    'eye of terror': {
+      title: 'EYE OF TERROR — CHAOS ETERNAL',
+      content: 'The Eye of Terror is a massive warp rift where reality and chaos blend seamlessly. Home to Chaos Space Marines, Daemons, and corrupted worlds, it serves as an eternal threat to Imperial stability. Warps in space make it difficult to navigate, and those who venture too close risk madness and corruption. It is the very antithesis of Imperial order.'
+    },
+    'dreadnought': {
+      title: 'DREADNOUGHT — THE VENERABLE WALKER',
+      content: 'A Dreadnought is a walking armored platform containing the remains of a fallen Space Marine warrior, kept alive in a mechanical sarcophagus. Ancient and incredibly powerful, Dreadnoughts serve as mobile artillery and command centers. Many have seen millennia of combat. They are respected as honored heroes, veterans of countless campaigns.'
+    },
+    'dark mechanicus': {
+      title: 'DARK MECHANICUS — TECH-HERESY',
+      content: 'The Dark Mechanicus are techno-heretics who have abandoned the Omnissiah\'s teachings and fallen to Chaos. They experiment with forbidden technology, creating abominations that should never exist. They view the Adeptus Mechanicus as weak and limited in their understanding. Dark Mechanicus artifacts are sought after for their power, regardless of the corruption they carry.'
+    },
+    'astronomican': {
+      title: 'ASTRONOMICAN — THE GOLDEN LIGHT',
+      content: 'The Astronomican is a massive psychic beacon projected from the Golden Throne on Terra, guiding Imperial ships through the Warp. Without it, faster-than-light travel would be impossible for the Imperium. Thousands of psykers must sacrifice their lives daily to power it. The Astronomican is the lifeline upon which all of human civilization depends.'
+    },
+    'golden throne': {
+      title: 'GOLDEN THRONE — THE ETERNAL SEAT',
+      content: 'The Golden Throne is an ancient construct holding the Emperor\'s failing body in stasis. For 10,000 years it has kept Him alive, though barely. The Throne is powered by thousands of psykers who burn out daily to maintain its function. Should the Golden Throne fail, the Emperor would die, and the Imperium would collapse into chaos and darkness.'
+    },
+    'guardsman': {
+      title: 'GUARDSMAN — THE COMMON SOLDIER',
+      content: 'A Guardsman is a common soldier of the Imperial Guard, the Imperium\'s primary fighting force. Armed with a Lasgun and basic armor, they lack the genetic modifications of Space Marines. Yet through discipline, numbers, and unwavering faith, they hold the line against impossible odds. A Guardsman\'s sacrifice is the bedrock of Imperial defense.'
+    },
+    'commissar': {
+      title: 'COMMISSAR — DISCIPLINE AND FAITH',
+      content: 'Commissars are political and military officers who maintain discipline and morale within Imperial Guard regiments. Armed with a bolt pistol and typically a chainsword, they execute deserters and inspire troops through leadership. A Commissar\'s presence stiffens resolve and ensures the Emperor\'s will is followed. Their judgments are swift and final.'
+    },
+    'black library': {
+      title: 'BLACK LIBRARY — THE FORBIDDEN ARCHIVES',
+      content: 'The Black Library is a hidden archive of forbidden knowledge guarded by the Eldar. It contains dark secrets, forbidden technology, and lore that would damn anyone who reads it. Though guarded fiercely by the Eldar, those rare few who access it gain tremendous power—at terrible cost. Some secrets were meant to remain unlearned.'
+    },
+    'abaddon': {
+      title: 'ABADDON THE DESPOILER — THE ARCH-ENEMY',
+      content: 'Abaddon the Despoiler is the supreme leader of Chaos Space Marines and most powerful servant of Chaos. As the Warmaster of Chaos, he leads endless Black Crusades against the Imperium. He was once loyal to the Emperor before being corrupted. Now he is one of the greatest threats to Imperial survival, a demigod of destruction and betrayal.'
+    }
+  }
+
+  const handleServoSkullSearch = async (query) => {
+    if (!query.trim()) return
+
+    setServoSkullLoading(true)
+
+    // Search through local knowledge base first
+    const lowerQuery = query.toLowerCase()
+    let result = null
+
+    for (const [key, value] of Object.entries(servoSkullKnowledgeBase)) {
+      if (lowerQuery.includes(key) || key.includes(lowerQuery)) {
+        result = value
+        break
+      }
+    }
+
+    if (!result) {
+      // Try partial matching in local database
+      for (const [key, value] of Object.entries(servoSkullKnowledgeBase)) {
+        if (lowerQuery.split(' ').some(word => key.includes(word)) || 
+            value.title.toLowerCase().includes(lowerQuery)) {
+          result = value
+          break
+        }
+      }
+    }
+
+    // If not found locally, try Wikipedia
+    if (!result) {
+      try {
+        const response = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`,
+          { mode: 'cors' }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          result = {
+            title: data.title || query.toUpperCase(),
+            content: data.extract || 'No information found.',
+            source: 'WIKIPEDIA ARCHIVE'
+          }
+        }
+      } catch (error) {
+        // Wikipedia fetch failed, use generic error
+        result = null
+      }
+    }
+
+    // Add to history
+    setServoSkullSearchHistory([{ query, result }, ...servoSkullSearchHistory.slice(0, 9)])
+    
+    if (result) {
+      setServoSkullResults(result)
+    } else {
+      setServoSkullResults({
+        title: 'QUERY INCONCLUSIVE',
+        content: 'Information not available in Servo Skull database or Wikipedia archives. Try asking about: Warhammer 40k topics (Space Marines, Chaos, Emperor, etc.), History, Science, Geography, Technology, or any other general knowledge topic.'
+      })
+    }
+
+    setServoSkullLoading(false)
+  }
+
+  // Purity Seals - collectible blessings from the Chaplain
+  const availablePuritySeals = [
+    { id: 'faith', name: 'Seal of Faith', symbol: '✦', description: 'Blessed by the Chaplain for unwavering faith' },
+    { id: 'valor', name: 'Seal of Valor', symbol: '⚔', description: 'Granted for courage in the face of the enemy' },
+    { id: 'devotion', name: 'Seal of Devotion', symbol: '✞', description: 'Bestowed for steadfast service to the Emperor' },
+    { id: 'purity', name: 'Seal of Purity', symbol: '◈', description: 'Awarded for maintaining spiritual purity' },
+    { id: 'sacrifice', name: 'Seal of Sacrifice', symbol: '✱', description: 'Earned through selfless sacrifice for the Imperium' },
+    { id: 'victory', name: 'Seal of Victory', symbol: '⬢', description: 'Claimed after glorious victory in battle' },
+    { id: 'duty', name: 'Seal of Duty', symbol: '◆', description: 'Presented for unwavering adherence to duty' },
+    { id: 'mercy', name: 'Seal of Mercy', symbol: '◇', description: 'Given for compassion shown to the weak' },
+    { id: 'honor', name: 'Seal of Honor', symbol: '★', description: 'Bestowed for maintaining personal honor' },
+    { id: 'wisdom', name: 'Seal of Wisdom', symbol: '◎', description: 'Granted for wise decisions under fire' }
+  ]
+
+  const collectPuritySeal = (sealId) => {
+    if (!puritySeals.find(s => s.id === sealId)) {
+      const seal = availablePuritySeals.find(s => s.id === sealId)
+      if (seal) {
+        setPuritySeals([...puritySeals, seal])
+      }
+    }
   }
 
   if (showAnimation) {
@@ -154,6 +434,8 @@ function App() {
               <TabButton label="Codex Astartes" active={activeTab === 'codex'} onClick={() => setActiveTab('codex')} />
               <TabButton label="Mission Plans" active={activeTab === 'missions'} onClick={() => setActiveTab('missions')} />
               <TabButton label="Command Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
+              <TabButton label="Servo Skull" active={activeTab === 'servo-skull'} onClick={() => setActiveTab('servo-skull')} />
+              <TabButton label="Chaplain" active={activeTab === 'chaplain'} onClick={() => setActiveTab('chaplain')} />
             </div>
 
             {/* Data panels */}
@@ -186,8 +468,8 @@ function App() {
                 </div>
               </DataPanel>
 
-              {/* Star Map panel — full width */}
-              <div className="lg:col-span-2">
+              {/* Star Map panel */}
+              <div className="lg:col-span-1">
                 <DataPanel title="▸ Star Map — Armageddon Sub-Sector">
                   <StarMap onSelectPlanet={setSelectedPlanet} />
                 </DataPanel>
@@ -274,41 +556,65 @@ function App() {
                       <ellipse cx="200" cy="90" rx="45" ry="20" fill="#FFD700" opacity="0.1" />
                       
                       {/* The Emperor's form - skeletal/corpse appearance */}
-                      {/* Head - skull-like */}
-                      <circle cx="200" cy="80" r="20" fill="#E6E6FA" opacity="0.7" stroke="#39ff14" strokeWidth="2" filter="url(#emperorGlow)" />
+                      {/* Head - skull-like, more dead appearance */}
+                      <circle cx="200" cy="80" r="20" fill="#8B8680" opacity="0.9" stroke="#39ff14" strokeWidth="2" filter="url(#emperorGlow)" />
                       
-                      {/* Empty eye sockets with glow */}
-                      <circle cx="193" cy="75" r="3" fill="#39ff14" opacity="0.9" />
-                      <circle cx="207" cy="75" r="3" fill="#39ff14" opacity="0.9" />
+                      {/* Skull jaw structure */}
+                      <rect x="185" y="92" width="30" height="8" fill="#6B6660" opacity="0.8" stroke="#39ff14" strokeWidth="1" />
                       
-                      {/* Robes - ornate and detailed */}
-                      <path d="M 170 100 Q 160 140 170 180 L 200 220 L 230 180 Q 240 140 230 100" fill="#FFD700" opacity="0.4" stroke="#39ff14" strokeWidth="2" />
+                      {/* Cracks and decay on skull */}
+                      <line x1="190" y1="65" x2="195" y2="80" stroke="#39ff14" strokeWidth="0.5" opacity="0.6" />
+                      <line x1="210" y1="65" x2="205" y2="80" stroke="#39ff14" strokeWidth="0.5" opacity="0.6" />
+                      <line x1="195" y1="60" x2="200" y2="75" stroke="#39ff14" strokeWidth="0.3" opacity="0.5" />
+                      <line x1="205" y1="60" x2="200" y2="75" stroke="#39ff14" strokeWidth="0.3" opacity="0.5" />
                       
-                      {/* Robe details */}
-                      <line x1="175" y1="110" x2="175" y2="170" stroke="#39ff14" strokeWidth="0.8" opacity="0.5" />
-                      <line x1="225" y1="110" x2="225" y2="170" stroke="#39ff14" strokeWidth="0.8" opacity="0.5" />
-                      <path d="M 180 130 Q 200 140 220 130" fill="none" stroke="#39ff14" strokeWidth="0.8" opacity="0.5" />
+                      {/* Deep hollow eye sockets - empty void */}
+                      <circle cx="193" cy="75" r="4" fill="#000000" opacity="0.95" stroke="#2B2B2B" strokeWidth="1" />
+                      <circle cx="207" cy="75" r="4" fill="#000000" opacity="0.95" stroke="#2B2B2B" strokeWidth="1" />
                       
-                      {/* Aquila - Imperial Eagle on chest */}
+                      {/* Faint psychic eye glow deep in sockets */}
+                      <circle cx="193" cy="75" r="1.5" fill="#39ff14" opacity="0.7" />
+                      <circle cx="207" cy="75" r="1.5" fill="#39ff14" opacity="0.7" />
+                      
+                      {/* Nasal cavity - skeletal death */}
+                      <path d="M 197 80 L 200 85 L 203 80" fill="none" stroke="#1a1a1a" strokeWidth="1" opacity="0.8" />
+                      
+                      {/* Desiccated robes - tattered and rotting */}
+                      <path d="M 170 100 Q 160 140 170 180 L 200 220 L 230 180 Q 240 140 230 100" fill="#4A3F1A" opacity="0.6" stroke="#39ff14" strokeWidth="2" />
+                      
+                      {/* Torn robe sections showing skeletal form */}
+                      <line x1="175" y1="110" x2="175" y2="170" stroke="#39ff14" strokeWidth="0.8" opacity="0.6" />
+                      <line x1="225" y1="110" x2="225" y2="170" stroke="#39ff14" strokeWidth="0.8" opacity="0.6" />
+                      <path d="M 180 130 Q 200 140 220 130" fill="none" stroke="#39ff14" strokeWidth="0.8" opacity="0.6" />
+                      
+                      {/* Skeletal ribcage visible through robes */}
+                      <path d="M 190 115 Q 200 125 210 115" fill="none" stroke="#8B8680" strokeWidth="1" opacity="0.7" />
+                      <path d="M 188 130 Q 200 140 212 130" fill="none" stroke="#8B8680" strokeWidth="1" opacity="0.7" />
+                      <path d="M 190 145 Q 200 155 210 145" fill="none" stroke="#8B8680" strokeWidth="1" opacity="0.7" />
+                      <line x1="200" y1="115" x2="200" y2="155" stroke="#8B8680" strokeWidth="0.8" opacity="0.6" />
+                      
+                      {/* Blackened, corrupted Aquila - Imperial Eagle on chest */}
                       <g filter="url(#emperorGlow)">
-                        <circle cx="200" cy="140" r="15" fill="none" stroke="#39ff14" strokeWidth="1.5" opacity="0.8" />
-                        <path d="M 185 130 L 200 145 L 215 130" fill="none" stroke="#39ff14" strokeWidth="1.5" opacity="0.8" />
-                        <path d="M 185 150 L 200 135 L 215 150" fill="none" stroke="#39ff14" strokeWidth="1.5" opacity="0.8" />
+                        <circle cx="200" cy="140" r="15" fill="none" stroke="#39ff14" strokeWidth="1.5" opacity="0.6" />
+                        <path d="M 185 130 L 200 145 L 215 130" fill="none" stroke="#1a1a1a" strokeWidth="1.5" opacity="0.8" />
+                        <path d="M 185 150 L 200 135 L 215 150" fill="none" stroke="#1a1a1a" strokeWidth="1.5" opacity="0.8" />
+                        {/* Decay marks on Aquila */}
+                        <circle cx="200" cy="140" r="12" fill="none" stroke="#39ff14" strokeWidth="0.5" opacity="0.4" strokeDasharray="2,2" />
                       </g>
                       
-                      {/* Psychic aura around body */}
-                      <circle cx="200" cy="130" r="50" fill="none" stroke="#39ff14" strokeWidth="2" opacity="0.6" filter="url(#psychicAura)" />
-                      <circle cx="200" cy="130" r="60" fill="none" stroke="#facc15" strokeWidth="1" opacity="0.3" filter="url(#psychicAura)" />
+                      {/* Psychic aura - sickly and unstable */}
+                      <circle cx="200" cy="130" r="50" fill="none" stroke="#39ff14" strokeWidth="2" opacity="0.5" filter="url(#psychicAura)" />
+                      <circle cx="200" cy="130" r="60" fill="none" stroke="#2D5016" strokeWidth="1" opacity="0.4" filter="url(#psychicAura)" />
                       
-                      {/* Psychic energy rays emanating */}
-                      <line x1="200" y1="20" x2="200" y2="10" stroke="#39ff14" strokeWidth="2" opacity="0.8" />
-                      <line x1="250" y1="45" x2="265" y2="35" stroke="#39ff14" strokeWidth="1.5" opacity="0.7" />
-                      <line x1="150" y1="45" x2="135" y2="35" stroke="#39ff14" strokeWidth="1.5" opacity="0.7" />
-                      <line x1="270" y1="100" x2="290" y2="100" stroke="#39ff14" strokeWidth="1.5" opacity="0.6" />
-                      <line x1="130" y1="100" x2="110" y2="100" stroke="#39ff14" strokeWidth="1.5" opacity="0.6" />
+                      {/* Corrupted/weakening psychic rays */}
+                      <line x1="200" y1="20" x2="200" y2="10" stroke="#39ff14" strokeWidth="1.5" opacity="0.6" strokeDasharray="2,2" />
+                      <line x1="250" y1="45" x2="265" y2="35" stroke="#39ff14" strokeWidth="1" opacity="0.5" strokeDasharray="2,2" />
+                      <line x1="150" y1="45" x2="135" y2="35" stroke="#39ff14" strokeWidth="1" opacity="0.5" strokeDasharray="2,2" />
+                      <line x1="270" y1="100" x2="290" y2="100" stroke="#39ff14" strokeWidth="1" opacity="0.4" strokeDasharray="3,3" />
+                      <line x1="130" y1="100" x2="110" y2="100" stroke="#39ff14" strokeWidth="1" opacity="0.4" strokeDasharray="3,3" />
                       
-                      {/* Golden glow from the Emperor */}
-                      <circle cx="200" cy="120" r="55" fill="url(#throneRadiance)" opacity="0.4" />
+                      {/* Dimmer, sickly glow from the Emperor */}
+                      <circle cx="200" cy="120" r="55" fill="url(#throneRadiance)" opacity="0.2" />
                       
                       {/* Status text */}
                       <text x="200" y="380" textAnchor="middle" fontSize="11" fill="#39ff14" fontWeight="bold" opacity="0.9" fontFamily="monospace">
@@ -992,7 +1298,7 @@ function App() {
             {/* Command Support Tab */}
             {activeTab === 'support' && (
             <div className="flex-1 p-3 md:p-6 flex flex-col overflow-hidden">
-              <div className="border border-[#39ff14] bg-[#0d220d] rounded flex flex-col h-full">
+              <div className="border border-[#39ff14] bg-[#0d220d] rounded flex flex-col h-full" data-chat-container>
                 
                 {/* Chat Header */}
                 <div className="border-b border-[#166534] px-4 py-3 bg-[#0d220d]">
@@ -1072,6 +1378,255 @@ function App() {
                   >
                     SEND
                   </button>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Servo Skull Tab */}
+            {activeTab === 'servo-skull' && (
+            <div className="flex-1 p-3 md:p-6 flex flex-col overflow-hidden">
+              <div className="border border-[#39ff14] bg-[#0d220d] rounded flex flex-col h-full">
+                
+                {/* Header */}
+                <div className="border-b border-[#166534] px-4 py-3 bg-[#0d220d]">
+                  <div className="text-sm tracking-widest uppercase terminal-glow mb-1">
+                    ▸ SERVO SKULL COGNITOR
+                  </div>
+                  <div className="text-xs text-[#166534]">
+                    WARHAMMER KNOWLEDGE ARCHIVE — SEARCH THE IMPERIUM'S COLLECTIVE WISDOM
+                  </div>
+                </div>
+
+                {/* Search Results Area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {servoSkullLoading ? (
+                    <div className="text-xs text-[#166534] text-center mt-8">
+                      <div className="text-[#39ff14] font-bold animate-pulse">
+                        ▸ SEARCHING ARCHIVES...
+                      </div>
+                      <div className="text-[0.75rem] mt-2">Querying Warhammer database and Wikipedia...</div>
+                    </div>
+                  ) : !servoSkullResults ? (
+                    <div className="text-xs text-[#166534] space-y-2">
+                      <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a]">
+                        <div className="text-[#39ff14] font-bold mb-2">▸ SERVO SKULL COGNITOR — WARHAMMER & GENERAL KNOWLEDGE</div>
+                        <div>Search for 40k lore or any general topic:</div>
+                        <div className="mt-2 space-y-1 text-[0.75rem]">
+                          <div className="text-[#facc15] font-bold">Warhammer Topics:</div>
+                          <div>• Space Marines, Ultramarines, Blood Angels, Dark Angels, Chaos, Abaddon</div>
+                          <div>• Adeptus Mechanicus, Emperor, Golden Throne, Astronomican, Ork, Inquisition</div>
+                          <div>• Tyranid, Necron, Tau, Warp, Geneseed, Heresy, Psyker, Eldar</div>
+                          <div className="text-[#facc15] font-bold mt-2">General Topics (Wikipedia):</div>
+                          <div>• History, Science, Technology, Geography, Art, Literature, Biology</div>
+                          <div>• Mathematics, Physics, Chemistry, Astronomy, Philosophy, And much more...</div>
+                        </div>
+                      </div>
+                      
+                      {servoSkullSearchHistory.length > 0 && (
+                        <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a]">
+                          <div className="text-[#39ff14] font-bold mb-2">▸ RECENT QUERIES</div>
+                          <div className="space-y-1">
+                            {servoSkullSearchHistory.map((entry, idx) => (
+                              <div 
+                                key={idx}
+                                onClick={() => handleServoSkullSearch(entry.query)}
+                                className="text-[0.75rem] cursor-pointer hover:text-[#facc15] transition"
+                              >
+                                → {entry.query}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="border-l-2 border-[#39ff14] pl-3 py-2">
+                        <div className="text-sm font-bold text-[#39ff14] mb-2">
+                          {servoSkullResults.title}
+                        </div>
+                        {servoSkullResults.source && (
+                          <div className="text-[0.7rem] text-[#166534] mb-1">
+                            [Source: {servoSkullResults.source}]
+                          </div>
+                        )}
+                        <div className="text-xs text-[#39ff14] leading-relaxed">
+                          {servoSkullResults.content}
+                        </div>
+                      </div>
+                      
+                      {servoSkullSearchHistory.length > 0 && (
+                        <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a] mt-4">
+                          <div className="text-[#39ff14] font-bold text-xs mb-2">▸ SEARCH HISTORY</div>
+                          <div className="space-y-1">
+                            {servoSkullSearchHistory.map((entry, idx) => (
+                              <div 
+                                key={idx}
+                                onClick={() => handleServoSkullSearch(entry.query)}
+                                className="text-[0.7rem] cursor-pointer text-[#166534] hover:text-[#facc15] transition"
+                              >
+                                → {entry.query}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Input */}
+                <div className="border-t border-[#166534] px-4 py-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={servoSkullQuery}
+                    onChange={(e) => setServoSkullQuery(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && servoSkullQuery.trim()) {
+                        handleServoSkullSearch(servoSkullQuery)
+                        setServoSkullQuery('')
+                      }
+                    }}
+                    placeholder="Query the Servo Skull..."
+                    className="flex-1 bg-[#0a1a0a] border border-[#166534] text-[#39ff14] placeholder-[#166534] px-2 py-1 text-xs font-mono focus:outline-none focus:border-[#39ff14]"
+                  />
+                  <button
+                    onClick={() => {
+                      if (servoSkullQuery.trim() && !servoSkullLoading) {
+                        handleServoSkullSearch(servoSkullQuery)
+                        setServoSkullQuery('')
+                      }
+                    }}
+                    disabled={servoSkullLoading}
+                    className="px-3 py-1 bg-[#39ff14] text-[#0d220d] text-xs font-bold hover:bg-[#facc15] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {servoSkullLoading ? 'SEARCHING...' : 'SEARCH'}
+                  </button>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Chaplain Tab */}
+            {activeTab === 'chaplain' && (
+            <div className="flex-1 p-3 md:p-6 flex flex-col overflow-hidden">
+              <div className="border border-[#39ff14] bg-[#0d220d] rounded flex flex-col h-full">
+                
+                {/* Header */}
+                <div className="border-b border-[#166534] px-4 py-3 bg-[#0d220d]">
+                  <div className="text-sm tracking-widest uppercase terminal-glow mb-1">
+                    ▸ CHAPLAIN — SPIRITUAL GUIDANCE
+                  </div>
+                  <div className="text-xs text-[#166534]">
+                    BESTOWER OF PURITY SEALS — BLESSINGS FOR YOUR ARMOR
+                  </div>
+                </div>
+
+                {/* Seals Display Area */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-4">
+                    {/* Your Seals */}
+                    <div className="border border-[#39ff14] p-3 rounded bg-[#0a1a0a]">
+                      <div className="text-sm font-bold text-[#39ff14] mb-3">
+                        ▸ YOUR PURITY SEALS ({puritySeals.length})
+                      </div>
+                      {puritySeals.length === 0 ? (
+                        <div className="text-xs text-[#166534]">
+                          No purity seals collected yet. Seek the Chaplain's blessings below.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {puritySeals.map((seal) => (
+                            <div key={seal.id} className="border border-[#39ff14] p-2 rounded text-center bg-[#0d220d]">
+                              <div className="text-2xl text-[#facc15] mb-1">{seal.symbol}</div>
+                              <div className="text-[0.7rem] font-bold text-[#39ff14]">{seal.name}</div>
+                              <div className="text-[0.6rem] text-[#166534] mt-1">{seal.description}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Available Seals */}
+                    <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a]">
+                      <div className="text-sm font-bold text-[#39ff14] mb-3">
+                        ▸ AVAILABLE BLESSINGS
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {availablePuritySeals.map((seal) => {
+                          const isCollected = puritySeals.find(s => s.id === seal.id)
+                          return (
+                            <button
+                              key={seal.id}
+                              onClick={() => collectPuritySeal(seal.id)}
+                              disabled={isCollected}
+                              className={`p-2 rounded text-center transition ${
+                                isCollected
+                                  ? 'border border-[#166534] bg-[#0a1a0a] text-[#166534] cursor-not-allowed opacity-50'
+                                  : 'border border-[#39ff14] bg-[#0d220d] hover:bg-[#166534] text-[#39ff14] cursor-pointer'
+                              }`}
+                            >
+                              <div className="text-2xl mb-1">{seal.symbol}</div>
+                              <div className="text-[0.7rem] font-bold">{seal.name}</div>
+                              <div className="text-[0.6rem] mt-1 text-[#facc15]">
+                                {isCollected ? 'Collected' : 'Seek Blessing'}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Chaplain Message */}
+                    <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a]">
+                      <div className="text-xs text-[#39ff14] leading-relaxed">
+                        <div className="font-bold mb-2">▸ CHAPLAIN'S WORDS</div>
+                        "May these purity seals shield you from corruption, temptation, and the whispers of the Warp. Each seal is a mark of your faith and devotion to the Emperor of Mankind. Wear them with honor, warrior, and know that the blessings of this Chapter are upon you. The light of the Emperor endures eternal."
+                      </div>
+                    </div>
+
+                    {/* Tactical Map */}
+                    <div className="border border-[#166534] p-3 rounded bg-[#0a1a0a]">
+                      <div className="text-[#166534] mb-2 tracking-widest text-sm font-bold">▸ NEARBY CONTACTS</div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                        {/* Simple Tactical Map */}
+                        <div className="border border-[#166534] p-2 bg-[#0a1a0a] font-mono text-[0.65rem] leading-tight">
+                          <div className="text-[#39ff14] font-bold mb-1">TACTICAL MAP</div>
+                          <div className="space-y-0 text-[#166534]">
+                            <div>. . C . . </div>
+                            <div>. . . . . </div>
+                            <div>. . Y . . </div>
+                            <div>. . . . . </div>
+                            <div>. . . . . </div>
+                          </div>
+                          <div className="text-[#166534] text-[0.6rem] mt-1">
+                            <span className="text-[#39ff14]">Y</span> = You | <span className="text-[#facc15]">C</span> = Chaplain
+                          </div>
+                        </div>
+
+                        {/* Your Position */}
+                        <div className="border border-[#39ff14] p-2 bg-[#0d220d] text-[#39ff14]">
+                          <div className="font-bold">YOUR POSITION</div>
+                          <div className="text-[0.7rem] text-[#166534] mt-1">
+                            <div>Sector: 7-Green</div>
+                            <div>Coordinates: 145.2, 78.9</div>
+                            <div>Status: MOBILE</div>
+                          </div>
+                        </div>
+
+                        {/* Chaplain Position */}
+                        <div className="border border-[#facc15] p-2 bg-[#0d220d] text-[#facc15]">
+                          <div className="font-bold">CHAPLAIN LOCATION</div>
+                          <div className="text-[0.7rem] text-[#166534] mt-1">
+                            <div>Sector: 7-Green</div>
+                            <div>Coordinates: 145.1, 82.1</div>
+                            <div>Distance: ~3.2m NORTH</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1205,7 +1760,7 @@ function StarMap({ onSelectPlanet }) {
     t === 'high' ? '#ff4040' : t === 'medium' ? '#facc15' : '#39ff14'
 
   return (
-    <div className="relative w-full" style={{ paddingBottom: '45%' }}>
+    <div className="relative w-full" style={{ paddingBottom: '80%' }}>
       <svg
         className="absolute inset-0 w-full h-full"
         viewBox="0 0 100 100"
@@ -1311,7 +1866,289 @@ TITHE STATUS: CRITICAL — Production at 12% Capacity
 MILITARY VALUE: EXTREME
 Strategic Position in Sector Defense Network: CRITICAL
 
-[END RECORD]
+═══════════════════════════════════════════════════════════
+
+HISTORICAL RECORD — NOTABLE EVENTS:
+
+998.M41 — ORK INVASION (WAAAGH! GHAZGHKULL THRAKA)
+Status: CATASTROPHIC ASSAULT — ONGOING RESISTANCE
+- Initial Landing: 47 Orkish Kroozers Deployed
+- Ground Forces: Estimated 8+ Million Ork Warriors
+- Casualties (Imperial): 11.4 Billion Confirmed
+- Casualties (Ork): Unknown — Continuous Reinforcement
+- Defense Commander: Colonel Sebastien Yarrick (PROMOTED from Major)
+
+997.M41 — PLANETARY GOVERNOR SCANDAL
+- Herman von Strab: Ordered population evacuation (UNAUTHORIZED)
+- Court Martial Result: Guilty of Cowardice, Negligence, Abandonment of Duty
+- Sentence: EXECUTION (Bolter Round to the Head)
+- Impact: Severe Loss of Public Confidence
+
+985.M41 — LAST MAJOR PEACE CYCLE
+- Hive Populations at Peak: 48.2 Billion
+- Industrial Output: 94% Capacity
+- Security Rating: GREEN (No Notable Xenos Activity)
+
+═══════════════════════════════════════════════════════════
+
+RELIGIOUS & CULTURAL DATA:
+
+DOMINANT FAITH: Cult of the Omnissiah (Adeptus Mechanicus)
+- Primary Temple: Factorum Cathedral (Hive Infernus)
+- Tech-Priesthood Population: ~4.2 Million
+- Sacred Manufactories: 12 (Protected Sites)
+
+SECONDARY CULTS: Imperial Creed (General Population)
+- Ecclesiarchy Representation: Moderate
+- Missionary Activity: Ongoing
+
+CULTURAL IDENTITY:
+- Primary Language: Low Gothic (Industrial Dialect)
+- Secondary Languages: Binaric Cant (Technical), High Gothic (Administrative)
+- Cultural Archetype: Industrial-Militaristic
+- Loyalty Index: STEADFAST (Despite Current Crisis)
+
+═══════════════════════════════════════════════════════════
+
+DEFENSE INFRASTRUCTURE:
+
+ORBITAL DEFENSE GRID:
+- Weapon Batteries: 247 (Functional: 89)
+- Missile Platforms: 156 (Functional: 34)
+- Shield Generators: 12 (Operational: 3 — CRITICAL)
+- Sensor Arrays: 89 (Functional: 71)
+
+GROUND FORTIFICATIONS:
+- Fortress Complexes: 47
+- Bunker Networks: 1,247
+- Artillery Emplacements: 3,891
+- Anti-Aircraft Batteries: 2,156
+
+MILITARY GARRISON:
+- Cadia Regiment: 40,000 (Current: 8,400 — Casualties: 31,600)
+- Tanith First-and-Only: 2,100 (Current: 891 — KIA: 1,209)
+- Local Militia: 2.1 Million (Organized, Armed)
+- Space Marine Contingent: Variable (Ultramarines Chapter Deployed)
+
+═══════════════════════════════════════════════════════════
+
+NOTABLE FIGURES — CURRENT PERIOD:
+
+Colonel Sebastien Yarrick (ACTING GOVERNOR)
+- Rank: Full Colonel, Imperial Guard
+- Age: 67 Standard Years
+- Combat Experience: 50+ Years of Active Duty
+- Notable Achievements: Survived 12 Ork Invasions Previously
+- Status: ACTIVE COMMAND — War Governor Authority
+
+Chapter Master Marneus Calgar (Ultramarines)
+- Authority: Sector Astartes Command
+- Status: DEPLOYED TO ARMAGEDDON
+- Mission: Coordinate Space Marine Defense Operations
+- Current Strength: 2 Battle Companies (Variable Reinforcement)
+
+Castellan Grendel (Fortress Commander)
+- Position: Chief Defender of Hive Infernus
+- Status: Heavily Wounded (Continuing Duty)
+- Notable: Led Last Major Victory Against Ork Advance (997.M41)
+
+═══════════════════════════════════════════════════════════
+
+XENOS THREAT ASSESSMENT:
+
+PRIMARY THREAT: Ork Empire (Waaagh! Ghazghkull)
+- Threat Level: CRITICAL
+- Strategic Objective: WORLD DOMINATION & CONQUEST
+- Leadership: Warboss Ghazghkull Mag Uruk Thraka (NOTORIOUS)
+- Estimated Forces: 8-12 Million Ground Troops (GROWING)
+
+SECONDARY THREATS:
+- Chaotic Cults (Minor — Suppressed)
+- Aberrant Xenos (Minimal — Localized)
+- Warp Incursions (Monitored — Contained)
+
+═══════════════════════════════════════════════════════════
+
+STRATEGIC ASSESSMENT:
+
+CURRENT SITUATION: CRITICAL — WAR FOOTING
+- Hive Defense: CONTESTED
+- Resource Production: SEVERELY DISRUPTED
+- Civilian Morale: LOW — BUT RESILIENT
+- Military Capability: DEGRADED (Ongoing Reinforcement)
+
+REINFORCEMENT STATUS:
+- Incoming Imperial Guard Regiments: 12 (ETA: 4-8 Weeks)
+- Space Marine Chapters Contacted: 7 (Deployment Uncertain)
+- Naval Support: Battlefleet Gothic (47% Combat Capable)
+- Mechanicus Support: FULL COMMITMENT (Weaponry, Ammunition, Repairs)
+
+PREDICTED OUTCOME: UNCERTAIN
+- Best Case: Ork Forces Contained, Eventual Repulsion (2-3 Years)
+- Worst Case: Planetary Fall, Exterminatus Ordered (Unknown Probability)
+
+═══════════════════════════════════════════════════════════
+
+RESOURCE AVAILABILITY:
+
+CRITICAL SHORTAGES:
+- Medical Supplies: 67% Depleted
+- Ammunition (Standard): 34% Reserves Remaining
+- Fuel (Industrial): 22% Stockpile
+- Food Supplies (Civilian): 8 Weeks to Critical Shortage
+
+ABUNDANT RESOURCES:
+- Weapons Manufacturing Capacity: MAINTAINED (Limited by Damage)
+- Metal Ore: ABUNDANT (Mining Operations Disrupted)
+- Water (Recycled): SUFFICIENT (Purification Required)
+
+═══════════════════════════════════════════════════════════
+
+MAJOR MILITARY ENGAGEMENTS — CURRENT CONFLICT:
+
+HELSREACH FORTRESS (998.M41)
+Location: Northern Industrial Zone
+Defending Force: Ultramarines (3 Squads), Imperial Guard (847 Troops)
+Duration: 47 Days Continuous Combat
+Outcome: FORTIFIED — Orks Temporarily Repelled
+Casualties: Imperial — 589 KIA | Ork — Estimated 15,000+ KIA
+Strategic Significance: CRITICAL — Last Major Victory
+
+INFERNUS INDUSTRIAL COMPLEX (998.M41)
+Location: Central Hive Sector
+Defending Force: Mixed Guard Regiments (12,000 Troops)
+Duration: Ongoing (27 Days)
+Current Status: CONTESTED — Heavy Fighting
+Casualties: Imperial — 2,847 KIA, 4,156 Wounded | Ork — Unknown (Continuous)
+Strategic Significance: VITAL — Prime Manufacturing Center (Weapons Production)
+
+VOLCANIC RIDGE DEFENSE LINE (998.M41)
+Location: Southern Perimeter
+Defending Force: Imperial Guard Artillery, Mechanicus War Machines
+Duration: 63 Days Continuous Bombardment
+Current Status: HOLDING — Limited Ammunition
+Casualties: Imperial — 1,204 KIA | Ork — Estimated 8,000+ KIA
+Strategic Significance: HIGH — Prevents Deep Hive Penetration
+
+═══════════════════════════════════════════════════════════
+
+MECHANICUS PRESENCE & ARTIFACTS:
+
+FORGE TEMPLE SECUNDUS
+- Status: OPERATIONAL (Damaged — 34% Capacity)
+- Primary Function: Weapons Manufacturing, Armor Repair
+- Tech-Priests Stationed: 1,247
+- Production Rate: 847 Lasguns Per Day (Down from 2,100)
+- Sacred Machines: 12 (Status: Operational)
+
+ANCIENT RELIC ENGINES
+- Titan-Class War Machines: 2 (Both Deployed in Defense)
+- Knight-Class Walkers: 7 (5 Operational, 2 Undergoing Repair)
+- Holy Sites: Deemed Battle-Sacred (Defended to Last Man)
+
+DARK MECHANICUS CONCERN
+- Investigation Level: ELEVATED
+- Suspected Corruption: 2 Facility Sites (Investigated — Cleared)
+- Quarantine Protocols: ACTIVE on 4 Locations
+- Inquisitorial Oversight: ONGOING
+
+═══════════════════════════════════════════════════════════
+
+CIVILIAN ADMINISTRATION — WAR ORGANIZATION:
+
+RATIONING STATUS:
+- Bread Rations: 400 Grams Per Person Per Day (Down from 800)
+- Protein Rations: Alternative Sources (Vat-Grown Substitute, Synthetic)
+- Water Ration: 2 Liters Per Person Per Day (CRITICAL in Summer Months)
+- Medical Supplies: SEVERELY RATIONED — Prioritize Military Needs
+
+POPULATION DISPLACEMENT:
+- Hive Infernus to Secondary Shelters: 14.2 Million
+- Hive Volcanus Evacuation: 8.7 Million (Ongoing)
+- Underground Bunker Settlements: 2.3 Million (Subterranean Hives)
+- War-Displaced Refugees: 1.1 Million (Receiving Aid)
+
+MORALE MONITORING:
+- Current Index: 4.7/10 (Low — Holding)
+- Compliance Rating: 94% (Martial Law Effective)
+- Civil Disorder: MINIMAL (Strong Leadership)
+- Religious Fervor: HEIGHTENED (Cult Activity Monitored)
+
+═══════════════════════════════════════════════════════════
+
+ADEPTUS ASTRA TELEPATHICA REPORTS:
+
+PSYCHIC PHENOMENA OBSERVED:
+- Warp Disturbance Level: ELEVATED (Background Noise ~6x Normal)
+- Astropath Communication: DEGRADED (Signal Quality 61% Normal)
+- Divination Accuracy: COMPROMISED (Ork Psychic Suppression Theory)
+- Prophetic Visions: MULTIPLE CONFIRMATIONS OF DARKNESS
+
+NOTABLE PSYKER INCIDENT (997.M41):
+- Incident: Mass Psychic Episode — 47 Sanctioned Psykers
+- Cause: Suspected Warp Incursion (Minor — Contained)
+- Outcome: 12 KIA (Neural Burnout), 35 Hospitalized (Permanent Damage)
+- Containment: SUCCESSFUL — Barriers Reinforced
+
+═══════════════════════════════════════════════════════════
+
+SECTOR NAVAL SUPPORT:
+
+BATTLESHIP EMPEROR'S HAMMER
+- Class: Mars-Class Battlecruiser
+- Status: OPERATIONAL (Hull Breach Repairs Ongoing)
+- Weapon Systems: 89% Functional
+- Crew: 47,200 (Casualties: 2,140)
+- Current Location: Orbital Patrol — Defending Approaches
+
+CRUISER SQUADRON DELTA
+- Vessels: 4 Light Cruisers (Dauntless-Class)
+- Status: 3 OPERATIONAL, 1 UNDER REPAIR
+- Primary Mission: Cargo Defense, Supply Line Protection
+- Recent Action: Intercepted Ork Pirate Vessel (Successful Boarding)
+
+═══════════════════════════════════════════════════════════
+
+ADDITIONAL COMMAND AUTHORITY:
+
+Lord Commissar Reuben Kess
+- Rank: Lord Commissar (Senior Morale Officer)
+- Assignment: Armageddon Campaign
+- Status: ACTIVE (Multiple Commendations)
+- Notable: Executed 37 Deserters (Maintaining Discipline)
+- Loyalty: UNQUESTIONABLE TO THE EMPEROR
+
+Magos Dominus Xeroc
+- Rank: High Priesthood (Mechanicus)
+- Role: Chief Tech-Priest of Armageddon
+- Status: COORDINATING FORGE PRODUCTION
+- Biological Status: Mostly Mechanical (3% Original Biology Remains)
+
+Captain Cadia-Stern (Navy)
+- Rank: Captain (Naval Command)
+- Vessel: Emperor's Hammer
+- Status: ENGAGED IN ORBITAL DEFENSE
+- Record: 22 Years Unbroken Naval Service
+
+═══════════════════════════════════════════════════════════
+
+PROPHECY & DIVINATION RECORDS:
+
+PRIOR WARNING (974.M41):
+- Source: Senior Astropath (Now Deceased)
+- Prophecy: "When the green tide rises, the faithful shall endure..."
+- Accuracy Assessment: VALIDATED (Current Crisis Matches Description)
+
+CURRENT DIVINATION (999.M42):
+- Oracle Status: Multiple Seers Agree on Central Point
+- Consensus Message: "Struggle Eternal — Victory Uncertain — Faith Endures"
+- Interpretation: CAUTIOUSLY OPTIMISTIC (Long War Expected)
+
+═══════════════════════════════════════════════════════════
+
+[END PLANETARY RECORD — ARMAGEDDON PRIME]
+[LAST UPDATED: 999.M42 — 14:47:23 TERRA TIME]
+[NEXT MANDATORY REVIEW: Continuous (War Status)]
       `
     },
     'fleet-registry': {
@@ -2317,6 +3154,73 @@ MORALE: EXCELLENT - Citizens Fed and Content
 }
 
 function ArchiveSearchModal({ searchQuery, setSearchQuery, searchCategory, setSearchCategory, onClose }) {
+  const getItemImage = (category, itemName) => {
+    const images = {
+      'space-marine-chapters': {
+        'Black Templars': '⚔️',
+        'Blood Angels': '⚡',
+        'Ultramarines': '🛡️',
+        'Space Wolves': '🐺',
+        'Dark Angels': '🌙',
+        'Salamanders': '🔥',
+        'Iron Hands': '⚙️',
+        'Raven Guard': '🦅',
+        'Imperial Fists': '✊',
+        'White Scars': '⚡'
+      },
+      'tyranids': {
+        'Carnifex': '🦖',
+        'Hive Tyrant': '👑',
+        'Termagant': '🦗',
+        'Ripper Swarm': '🐛',
+        'Gargoyle': '🦇',
+        'Ravenor': '👁️',
+        'Pyrovore': '🔥',
+        'Toxicrene': '☢️',
+        'Barbed Strangler': '🎯',
+        'Harpy': '🦅'
+      },
+      'necrons': {
+        'Necron Overlord': '👑',
+        'Immortal': '💀',
+        'Necron Warrior': '🤖',
+        'Canoptek Wraith': '👻',
+        'Triarch Praetorian': '⚔️',
+        'Cryptek': '🔮',
+        'Tomb Blade': '⚡',
+        'Scarab Swarm': '🐜',
+        'Lychguard': '🛡️',
+        'Spyder': '🕷️'
+      },
+      'locations': {
+        'Armageddon Prime': '🌍',
+        'Sotha': '⚙️',
+        'Helsreach': '🏰',
+        'Volcanus': '🌋',
+        'Tempestus': '🌾',
+        'Death Mire': '☠️',
+        'Infernus': '🔥',
+        'Mannheim': '🔬',
+        'Cadia Fortress': '🏯',
+        'Mars Archival': '📚'
+      },
+      'weapons': {
+        'Bolter': '🔫',
+        'Plasma Gun': '⚡',
+        'Lascannon': '🔴',
+        'Melta Gun': '🔥',
+        'Flamer': '🔥',
+        'Gauss Flayer': '🌟',
+        'Tesla Carbine': '⚡',
+        'Shuriken Catapult': '🌀',
+        'Heavy Bolter': '💥',
+        'Missile Launcher': '🚀'
+      }
+    }
+    
+    return images[category]?.[itemName] || '■'
+  }
+
   const searchDatabase = {
     'space-marine-chapters': [
       { name: 'Black Templars', specialty: 'Close Combat Specialists', strength: '1,000 Battle Brothers' },
@@ -2466,24 +3370,33 @@ function ArchiveSearchModal({ searchQuery, setSearchQuery, searchCategory, setSe
           <div className="space-y-3">
             {results.map((result, idx) => {
               const categoryLabel = categories.find(c => c.key === result.category)?.label || 'Unknown'
+              const image = getItemImage(result.category, result.name)
               return (
-                <div key={idx} className="border border-[#166534] bg-[#0d220d] p-3">
-                  <div className="text-[#39ff14] font-bold text-sm terminal-glow mb-1">
-                    {result.name}
+                <div key={idx} className="border border-[#166534] bg-[#0d220d] p-3 flex gap-3">
+                  {/* Image */}
+                  <div className="text-4xl flex-shrink-0 flex items-center justify-center w-16 h-16 border-2 border-[#39ff14] bg-[#0d220d] text-[#39ff14] font-bold" style={{ textShadow: '0 0 10px #39ff14', boxShadow: '0 0 15px rgba(57, 255, 20, 0.3)' }}>
+                    {image}
                   </div>
-                  <div className="text-xs text-[#166534] mb-2 tracking-wider">
-                    [{categoryLabel}]
-                  </div>
-                  <div className="text-xs text-[#39ff14] space-y-1">
-                    {Object.entries(result).map(([key, val]) => {
-                      if (key === 'name' || key === 'category') return null
-                      return (
-                        <div key={key} className="flex justify-between">
-                          <span className="text-[#166534] uppercase tracking-widest">{key}:</span>
-                          <span>{val}</span>
-                        </div>
-                      )
-                    })}
+                  
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="text-[#39ff14] font-bold text-sm terminal-glow mb-1">
+                      {result.name}
+                    </div>
+                    <div className="text-xs text-[#166534] mb-2 tracking-wider">
+                      [{categoryLabel}]
+                    </div>
+                    <div className="text-xs text-[#39ff14] space-y-1">
+                      {Object.entries(result).map(([key, val]) => {
+                        if (key === 'name' || key === 'category') return null
+                        return (
+                          <div key={key} className="flex justify-between">
+                            <span className="text-[#166534] uppercase tracking-widest">{key}:</span>
+                            <span>{val}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               )
