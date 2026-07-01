@@ -21,6 +21,7 @@ function App() {
   const [servoSkullLoading, setServoSkullLoading] = useState(false)
   const [puritySeals, setPuritySeals] = useState([])
   const [showHeresyPopup, setShowHeresyPopup] = useState(false)
+  const [isInputFocused, setIsInputFocused] = useState(false)
 
   useEffect(() => {
     if (showAnimation) {
@@ -59,6 +60,8 @@ function App() {
   useEffect(() => {
     const handleTabShortcut = (e) => {
       if (showAnimation) return // Don't trigger during bootup
+      if (archiveSearch) return // Don't trigger when search is open
+      if (isInputFocused) return // Don't trigger when any input is focused
       
       const tabMap = {
         '1': 'overview',
@@ -73,13 +76,14 @@ function App() {
       }
       
       if (tabMap[e.key]) {
+        e.preventDefault()
         setActiveTab(tabMap[e.key])
       }
     }
     
     window.addEventListener('keydown', handleTabShortcut)
     return () => window.removeEventListener('keydown', handleTabShortcut)
-  }, [showAnimation])
+  }, [showAnimation, archiveSearch, isInputFocused])
 
   const handleAIChat = (userMessage) => {
     const userMsg = {
@@ -2343,6 +2347,8 @@ function App() {
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && chatInput.trim()) {
                         handleAIChat(chatInput)
@@ -2469,6 +2475,8 @@ function App() {
                     type="text"
                     value={servoSkullQuery}
                     onChange={(e) => setServoSkullQuery(e.target.value)}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && servoSkullQuery.trim()) {
                         handleServoSkullSearch(servoSkullQuery)
