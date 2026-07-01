@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import './HolyTextScroll.css';
 
 const HolyTextScroll = () => {
+  const [displayedText, setDisplayedText] = useState('');
+
   const holyText = `
 ╔════════════════════════════════════════════════════════════════════════════════╗
 ║                    ─── IMPERIAL SCRIPTURE ARCHIVES ───                        ║
@@ -105,10 +108,25 @@ Long live the Golden Throne.
 ════════════════════════════════════════════════════════════════════════════════
   `.trim();
 
+  useEffect(() => {
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex <= holyText.length) {
+        setDisplayedText(holyText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 15); // Adjust speed: lower = faster, higher = slower
+
+    return () => clearInterval(typingInterval);
+  }, [holyText]);
+
   return (
     <div className="holy-text-container">
       <div className="holy-text-scroll">
-        {holyText}
+        {displayedText}
+        <span className="typing-cursor">_</span>
       </div>
     </div>
   );

@@ -22,10 +22,10 @@ function App() {
 
   useEffect(() => {
     if (showAnimation) {
-      // Animation plays for 5 seconds
+      // Animation plays for 13 seconds (to allow typing to complete)
       const animationTimer = setTimeout(() => {
         setIsFlickering(true)
-      }, 5000)
+      }, 13000)
 
       return () => clearTimeout(animationTimer)
     }
