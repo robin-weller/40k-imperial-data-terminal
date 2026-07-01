@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import HolyTextScroll from './HolyTextScroll.jsx'
+import imperialEagle from './assets/imperial-eagle.png'
 
 function App() {
   const [showAnimation, setShowAnimation] = useState(true)
@@ -19,15 +20,26 @@ function App() {
   const [servoSkullSearchHistory, setServoSkullSearchHistory] = useState([])
   const [servoSkullLoading, setServoSkullLoading] = useState(false)
   const [puritySeals, setPuritySeals] = useState([])
+  const [showHeresyPopup, setShowHeresyPopup] = useState(false)
 
   useEffect(() => {
     if (showAnimation) {
-      // Animation plays for 13 seconds (to allow typing to complete)
-      const animationTimer = setTimeout(() => {
-        setIsFlickering(true)
-      }, 13000)
+      const handleEnter = (e) => {
+        if (e.key === 'Enter') {
+          setIsFlickering(true)
+        }
+      }
 
-      return () => clearTimeout(animationTimer)
+      const handleClick = () => {
+        setIsFlickering(true)
+      }
+
+      window.addEventListener('keydown', handleEnter)
+      window.addEventListener('click', handleClick)
+      return () => {
+        window.removeEventListener('keydown', handleEnter)
+        window.removeEventListener('click', handleClick)
+      }
     }
   }, [showAnimation])
 
@@ -42,6 +54,32 @@ function App() {
       return () => clearTimeout(flickerTimer)
     }
   }, [isFlickering])
+
+  // Tab number shortcuts
+  useEffect(() => {
+    const handleTabShortcut = (e) => {
+      if (showAnimation) return // Don't trigger during bootup
+      
+      const tabMap = {
+        '1': 'overview',
+        '2': 'armor',
+        '3': 'emperor',
+        '4': 'codex',
+        '5': 'missions',
+        '6': 'support',
+        '7': 'servo-skull',
+        '8': 'chaplain',
+        '9': 'nav-files'
+      }
+      
+      if (tabMap[e.key]) {
+        setActiveTab(tabMap[e.key])
+      }
+    }
+    
+    window.addEventListener('keydown', handleTabShortcut)
+    return () => window.removeEventListener('keydown', handleTabShortcut)
+  }, [showAnimation])
 
   const handleAIChat = (userMessage) => {
     const userMsg = {
@@ -699,6 +737,279 @@ function App() {
     'artificial creativity': {
       title: 'ARTIFICIAL CREATIVITY — MACHINES MAKING ART',
       content: 'Artificial creativity involves AI systems generating art, music, and writing. Generative models like GANs and transformers create new content. AI challenges traditional notions of creativity. It\'s a growing field with both promise and ethical questions.'
+    },
+    'climate change': {
+      title: 'CLIMATE CHANGE — THE WARMING PLANET',
+      content: 'Climate change refers to long-term shifts in global temperatures and weather patterns. Human activities, especially burning fossil fuels, increase greenhouse gas emissions. This traps heat and warms the planet, causing environmental disruption. Addressing climate change requires global cooperation and renewable energy adoption.'
+    },
+    'psychology': {
+      title: 'PSYCHOLOGY — THE STUDY OF MIND',
+      content: 'Psychology is the science studying human behavior and mental processes. It explores cognition, emotion, personality, and motivation. Famous psychologists include Freud, Jung, and Skinner. Psychology has applications in therapy, education, and understanding human nature.'
+    },
+    'quantum mechanics': {
+      title: 'QUANTUM MECHANICS — THE PHYSICS OF THE TINY',
+      content: 'Quantum mechanics describes physics at atomic and subatomic scales. Particles exhibit wave-particle duality and exist in probabilistic states. Heisenberg\'s uncertainty principle shows we cannot know both position and velocity precisely. Quantum mechanics underlies modern technology and challenges our understanding of reality.'
+    },
+    'relativity': {
+      title: 'RELATIVITY — EINSTEIN\'S REVOLUTION',
+      content: 'Relativity is Einstein\'s theory describing space, time, and gravity. Special relativity shows time and space are relative to observer motion. General relativity describes gravity as spacetime curvature. Relativity predicts black holes, explains planetary motion, and guides GPS technology.'
+    },
+    'microbiology': {
+      title: 'MICROBIOLOGY — THE STUDY OF MICROORGANISMS',
+      content: 'Microbiology studies microscopic organisms including bacteria, viruses, and fungi. These organisms are essential to ecosystems but can cause disease. Microbiology advances medicine through antibiotics and vaccines. Understanding microorganisms is crucial for public health.'
+    },
+    'ecology': {
+      title: 'ECOLOGY — THE STUDY OF ECOSYSTEMS',
+      content: 'Ecology is the study of organisms and their relationships with each other and the environment. Ecosystems consist of biotic and abiotic components interconnected through energy flow. Ecology reveals how species depend on each other and their habitat. Understanding ecology is essential for conservation.'
+    },
+    'astronomy': {
+      title: 'ASTRONOMY — THE STUDY OF SPACE',
+      content: 'Astronomy is the scientific study of celestial objects and phenomena. It encompasses planets, stars, galaxies, and the universe itself. Astronomy has revealed the vastness of space and the insignificance of Earth. Modern astronomy uses telescopes, spectroscopy, and computational methods.'
+    },
+    'marine biology': {
+      title: 'MARINE BIOLOGY — LIFE IN THE OCEANS',
+      content: 'Marine biology studies organisms living in marine environments. The ocean covers 70% of Earth\'s surface and contains vast biodiversity. Marine life ranges from microscopic plankton to giant whales. Ocean health is critical for Earth\'s climate and humanity\'s future.'
+    },
+    'archaeology': {
+      title: 'ARCHAEOLOGY — UNCOVERING THE PAST',
+      content: 'Archaeology is the scientific study of human history and prehistory through excavation and artifact analysis. Archaeologists study ancient civilizations, settlements, and cultures. Methods include carbon dating, stratigraphy, and contextualization. Archaeology reveals humanity\'s story across millennia.'
+    },
+    'world war ii': {
+      title: 'WORLD WAR II — GLOBAL CONFLICT',
+      content: 'World War II (1939-1945) was the deadliest conflict in history, involving most nations. The Axis powers (Germany, Italy, Japan) fought the Allies (Britain, Soviet Union, United States, China). The war caused 70-85 million deaths and reshaped global politics. It led to the United Nations, decolonization, and nuclear age.'
+    },
+    'ancient egypt': {
+      title: 'ANCIENT EGYPT — THE GIFT OF THE NILE',
+      content: 'Ancient Egypt was one of history\'s greatest civilizations lasting 3,000 years. The Nile River enabled agriculture and prosperity. Egyptians created hieroglyphics, pyramids, and sophisticated government. Famous pharaohs include Khufu, Tutankhamun, and Cleopatra. Egypt\'s legacy continues in art, architecture, and culture.'
+    },
+    'leonardo da vinci': {
+      title: 'LEONARDO DA VINCI — THE UNIVERSAL GENIUS',
+      content: 'Leonardo da Vinci (1452-1519) was an Italian polymath excelling in art, science, and engineering. He painted the Mona Lisa and The Last Supper. Leonardo designed flying machines, hydraulic systems, and anatomical drawings centuries ahead of his time. He represents Renaissance ideals of universal knowledge.'
+    },
+    'shakespeare': {
+      title: 'WILLIAM SHAKESPEARE — THE BARD',
+      content: 'William Shakespeare (1564-1616) was an English playwright and poet who wrote 37 plays and 154 sonnets. His works including Hamlet, Macbeth, Romeo and Juliet remain culturally significant. Shakespeare invented many words and phrases still used today. He is widely considered the greatest writer in English language.'
+    },
+    'python programming': {
+      title: 'PYTHON PROGRAMMING — THE POPULAR LANGUAGE',
+      content: 'Python is a high-level programming language known for readability and simplicity. Created by Guido van Rossum, it emphasizes clean, understandable code. Python is widely used in web development, data science, AI, and automation. Its simple syntax makes it ideal for beginners while powerful enough for professionals.'
+    },
+    'world cup': {
+      title: 'WORLD CUP — THE SOCCER CHAMPIONSHIP',
+      content: 'The FIFA World Cup is the international soccer championship held every four years. It is the most-watched sporting event globally, with billions viewing the tournament. National teams compete for the trophy, with Brazil, Germany, and France among successful nations. The World Cup unites fans worldwide.'
+    },
+    'harry potter': {
+      title: 'HARRY POTTER — THE MAGICAL SAGA',
+      content: 'Harry Potter is a seven-book fantasy series by J.K. Rowling following a young wizard\'s journey. The books chronicle Harry\'s years at Hogwarts School of Witchcraft and Wizardry. The series became a cultural phenomenon spawning films, merchandise, and a theme park. It introduced millions to the joys of reading.'
+    },
+    'the beatles': {
+      title: 'THE BEATLES — THE LEGENDARY BAND',
+      content: 'The Beatles were a British rock band formed in 1960 consisting of John Lennon, Paul McCartney, George Harrison, and Ringo Starr. They revolutionized popular music with innovative songwriting and recording techniques. The Beatles remained the best-selling music artist ever. Their influence on music and culture is immeasurable.'
+    },
+    'steve jobs': {
+      title: 'STEVE JOBS — THE INNOVATOR',
+      content: 'Steve Jobs (1955-2011) was the co-founder of Apple Computer and a visionary entrepreneur. He revolutionized personal computers, animated films, and mobile devices. Jobs introduced the Macintosh, iPhone, and iPad which shaped modern technology. His focus on design and user experience transformed industries.'
+    },
+    'marie curie': {
+      title: 'MARIE CURIE — THE SCIENTIST',
+      content: 'Marie Curie (1867-1934) was a Polish-born physicist and chemist pioneering radioactivity research. She won two Nobel Prizes—the first woman to do so. Her discoveries laid groundwork for nuclear physics and medical applications. Curie exemplified scientific excellence despite facing gender discrimination.'
+    },
+    'vaccine': {
+      title: 'VACCINE — MEDICAL PREVENTION',
+      content: 'Vaccines are biological preparations stimulating immune response against specific diseases. They contain weakened or inactivated pathogens or their components. Vaccines have eradicated smallpox and reduced diseases like polio and measles. Vaccination is one of medicine\'s greatest achievements, saving millions of lives.'
+    },
+    'democracy': {
+      title: 'DEMOCRACY — RULE OF THE PEOPLE',
+      content: 'Democracy is a system of government where power rests with the people. Citizens participate through voting and representation. Different types include direct democracy (citizens vote on issues) and representative democracy (elected officials decide). Democracy emphasizes individual rights, equality, and freedom.'
+    },
+    'economics': {
+      title: 'ECONOMICS — THE STUDY OF RESOURCES',
+      content: 'Economics studies how societies manage scarce resources to satisfy unlimited wants. It analyzes production, consumption, and distribution of goods and services. Economics includes microeconomics (individual behavior) and macroeconomics (whole economies). Understanding economics is essential for policy and personal finance.'
+    },
+    'architecture': {
+      title: 'ARCHITECTURE — DESIGN OF STRUCTURES',
+      content: 'Architecture is the art and science of designing buildings and spaces. Architects balance aesthetics, functionality, and structural integrity. Architectural styles range from ancient (Greek, Roman) to modern (Bauhaus, Postmodern). Architecture shapes human experience and reflects cultural values.'
+    },
+    'cooking': {
+      title: 'COOKING — THE ART OF FOOD',
+      content: 'Cooking is the practice of preparing food through heat application. It transforms raw ingredients into edible, flavorful dishes. Cooking involves chemistry, technique, and creativity. Every culture has culinary traditions reflecting its history and available ingredients.'
+    },
+    'fashion': {
+      title: 'FASHION — STYLE AND EXPRESSION',
+      content: 'Fashion is the art of clothing and personal style reflecting culture and trends. Designers create collections combining aesthetics and practicality. Fashion industry impacts economy, environment, and society. Fashion allows self-expression and cultural identity.'
+    },
+    'mythology': {
+      title: 'MYTHOLOGY — ANCIENT STORIES',
+      content: 'Mythology consists of traditional stories explaining natural phenomena and cultural values. Ancient civilizations developed mythologies featuring gods and heroes. Greek, Roman, Norse, and Hindu mythologies remain influential. Mythology provides insight into how ancient peoples understood the world.'
+    },
+    // Basic Knowledge - Essential Topics
+    'water cycle': {
+      title: 'WATER CYCLE — NATURE\'S CIRCULATION',
+      content: 'The water cycle describes how water moves between Earth\'s surface and atmosphere. Water evaporates from oceans, lakes, and rivers into water vapor. Plants release water through transpiration. Water vapor condenses into clouds, forming precipitation that falls as rain or snow. The cycle continues indefinitely, distributing fresh water across the planet.'
+    },
+    'photosynthesis': {
+      title: 'PHOTOSYNTHESIS — PLANTS MAKE FOOD',
+      content: 'Photosynthesis is how plants convert sunlight into chemical energy. Chlorophyll in leaves absorbs light energy. Plants combine carbon dioxide from air and water from soil to create glucose (sugar) and oxygen. This process feeds the plant and produces oxygen we breathe. Photosynthesis forms the base of most food chains.'
+    },
+    'carbon cycle': {
+      title: 'CARBON CYCLE — CARBON\'S JOURNEY',
+      content: 'The carbon cycle describes carbon\'s movement through the environment. Carbon dioxide exists in the atmosphere and is absorbed by plants during photosynthesis. Animals eat plants, consuming carbon. When organisms die and decompose, carbon returns to soil and atmosphere. Fossil fuels contain ancient carbon. The carbon cycle connects all life on Earth.'
+    },
+    'nitrogen cycle': {
+      title: 'NITROGEN CYCLE — NITROGEN IN NATURE',
+      content: 'The nitrogen cycle describes how nitrogen moves between atmosphere, soil, and living organisms. Nitrogen comprises 78% of air but must be fixed by bacteria to become usable. Plants absorb nitrogen compounds through roots. Animals consume nitrogen by eating plants and other animals. Decomposition returns nitrogen to soil. Nitrogen is essential for protein synthesis in all organisms.'
+    },
+    'human skeleton': {
+      title: 'HUMAN SKELETON — BONE STRUCTURE',
+      content: 'The human skeleton consists of 206 bones providing structural support and protection. Bones protect organs, produce blood cells, and store minerals. The skeleton enables movement by working with muscles. Major bones include the skull (protecting the brain), ribs (protecting lungs and heart), and spine (supporting the body). The skeleton is a living system constantly remodeling itself.'
+    },
+    'human organs': {
+      title: 'HUMAN ORGANS — VITAL SYSTEMS',
+      content: 'Human organs are specialized structures performing specific functions. The heart pumps blood, lungs exchange gases, the brain controls everything, liver processes toxins, kidneys filter waste, and the stomach digests food. Each organ system works together to maintain life. The body has 11 major organ systems including circulatory, respiratory, nervous, and digestive systems.'
+    },
+    'nervous system': {
+      title: 'NERVOUS SYSTEM — BRAIN AND NERVES',
+      content: 'The nervous system transmits signals controlling body functions. The brain processes information and makes decisions. The spinal cord relays signals between brain and body. Peripheral nerves connect the central nervous system to the rest of the body. Neurons transmit electrical and chemical signals. The nervous system enables sensation, movement, thought, and emotion.'
+    },
+    'immune system': {
+      title: 'IMMUNE SYSTEM — BODY\'S DEFENSE',
+      content: 'The immune system defends the body against disease-causing pathogens. White blood cells attack invaders. The lymphatic system filters harmful substances. Antibodies recognize and neutralize pathogens. Vaccination prepares the immune system for future threats. A strong immune system keeps us healthy. Stress, sleep, and nutrition all impact immune function.'
+    },
+    'digestive system': {
+      title: 'DIGESTIVE SYSTEM — BREAKING DOWN FOOD',
+      content: 'The digestive system breaks down food into usable nutrients. The mouth begins digestion through chewing and saliva. The stomach mixes food with acids to create chyme. The small intestine absorbs nutrients. The large intestine absorbs water. Waste exits as feces. Digestion typically takes 24-72 hours. Healthy digestion requires fiber, water, and proper chewing.'
+    },
+    'cardiovascular system': {
+      title: 'CARDIOVASCULAR SYSTEM — HEART AND BLOOD',
+      content: 'The cardiovascular system transports blood carrying oxygen and nutrients throughout the body. The heart pumps blood through arteries and capillaries. Veins return blood to the heart. Red blood cells carry oxygen. White blood cells fight infection. Platelets aid clotting. The heart beats approximately 100,000 times daily. A healthy cardiovascular system is essential for life.'
+    },
+    'respiratory system': {
+      title: 'RESPIRATORY SYSTEM — BREATHING',
+      content: 'The respiratory system enables gas exchange between the body and atmosphere. The lungs absorb oxygen and release carbon dioxide. The diaphragm controls breathing. When we inhale, oxygen fills the lungs; when we exhale, carbon dioxide leaves. Red blood cells carry oxygen to cells. Cells produce carbon dioxide as waste. Healthy lungs are vital for oxygen delivery throughout the body.'
+    },
+    'states of matter': {
+      title: 'STATES OF MATTER — SOLID, LIQUID, GAS',
+      content: 'Matter exists in three states: solid, liquid, and gas. Solids have fixed shape and volume with closely packed particles. Liquids have fixed volume but take the shape of containers. Gases have no fixed shape or volume. Heat energy causes matter to change states. Water exemplifies all three: ice (solid), water (liquid), steam (gas). Understanding states of matter is fundamental to chemistry.'
+    },
+    'simple machines': {
+      title: 'SIMPLE MACHINES — BASIC TOOLS',
+      content: 'Simple machines are basic devices providing mechanical advantage. They include the lever (prying tool), incline (ramp), pulley (lifting), wheel and axle (rotation), screw (twisting), and wedge (splitting). Simple machines reduce effort required to accomplish tasks. Complex machines combine multiple simple machines. Understanding simple machines helps understand how tools work.'
+    },
+    'force and motion': {
+      title: 'FORCE AND MOTION — NEWTON\'S LAWS',
+      content: 'Force is a push or pull causing objects to accelerate. Newton\'s First Law: objects remain at rest or motion unless acted upon. Newton\'s Second Law: force equals mass times acceleration. Newton\'s Third Law: for every action, there\'s an equal opposite reaction. Friction opposes motion. Understanding force and motion explains how physical objects behave.'
+    },
+    'energy': {
+      title: 'ENERGY — THE CAPACITY TO WORK',
+      content: 'Energy is the capacity to do work or cause change. Kinetic energy is energy of motion. Potential energy is stored energy. Chemical energy powers living things. Electrical energy powers technology. Thermal energy is heat. Energy transforms between forms but is never destroyed—only converted. Understanding energy is fundamental to physics and technology.'
+    },
+    'weather': {
+      title: 'WEATHER — ATMOSPHERIC CONDITIONS',
+      content: 'Weather describes short-term atmospheric conditions including temperature, precipitation, and wind. The sun drives weather by heating the atmosphere unevenly. Water evaporates and condenses creating clouds and rain. Pressure systems create winds. Severe weather includes storms, tornadoes, and hurricanes. Weather forecasting uses scientific models and data. Climate differs from weather—climate is long-term patterns.'
+    },
+    'seasons': {
+      title: 'SEASONS — EARTH\'S YEARLY CYCLE',
+      content: 'Seasons are caused by Earth\'s tilted axis as it orbits the sun. When the Northern Hemisphere tilts toward the sun, it experiences summer; when tilted away, winter. Spring and fall occur during transitional periods. Each season brings distinct weather and daylight patterns. Seasons affect plant growth, animal behavior, and human activities. Seasons vary by latitude.'
+    },
+    'planets': {
+      title: 'PLANETS — OUR SOLAR SYSTEM',
+      content: 'Our solar system contains eight planets orbiting the sun. The inner planets (Mercury, Venus, Earth, Mars) are rocky. The outer planets (Jupiter, Saturn, Uranus, Neptune) are gas giants. Earth is our home, orbiting at the perfect distance for life. Each planet has unique characteristics: Mars is red, Jupiter is massive, Saturn has rings. Understanding planets helps us comprehend our place in the cosmos.'
+    },
+    'moon': {
+      title: 'MOON — EARTH\'S SATELLITE',
+      content: 'The Moon is Earth\'s natural satellite, orbiting approximately 238,900 miles away. It has a diameter about 1/4 of Earth\'s. The Moon\'s gravity causes ocean tides. One side always faces Earth due to gravitational locking. The Moon goes through phases from new to full as it orbits Earth. Moonlight is reflected sunlight. The Moon played a crucial role in evolution and human culture.'
+    },
+    'stars': {
+      title: 'STARS — DISTANT SUNS',
+      content: 'Stars are massive spheres of plasma held together by gravity. They shine through nuclear fusion converting hydrogen to helium. Stars vary in size, temperature, and brightness. The Sun is our nearest star. Other stars are so distant their light takes years to reach Earth. Stars eventually die, some becoming white dwarfs, neutron stars, or black holes. Stars inspire wonder and provide light for planets.'
+    },
+    'galaxies': {
+      title: 'GALAXIES — ISLAND UNIVERSES',
+      content: 'Galaxies are enormous systems containing billions of stars. Our Milky Way galaxy is home to Earth, Sun, and billions of stars. Galaxies vary in shape: spiral (rotating disks), elliptical (smooth, egg-shaped), and irregular. Galaxies contain gas, dust, and dark matter. Billions of galaxies populate the observable universe. Galaxies are separated by vast distances spanning millions of light-years.'
+    },
+    'continents': {
+      title: 'CONTINENTS — EARTH\'S LANDMASSES',
+      content: 'Earth has seven continents: Africa, Antarctica, Asia, Europe, North America, Oceania, and South America. Asia is the largest by area and population. Africa contains the most countries. Antarctica is the coldest. Each continent has unique climate, wildlife, and cultures. Continents are large portions of Earth\'s crust. Understanding continents helps with geography and world culture.'
+    },
+    'oceans': {
+      title: 'OCEANS — EARTH\'S WATERS',
+      content: 'Earth\'s five oceans (Pacific, Atlantic, Indian, Arctic, Southern) cover 71% of the surface. Oceans contain 97% of Earth\'s water (salt water). The Pacific Ocean is largest. Oceans regulate climate, provide food and oxygen, and contain vast biodiversity. Ocean depths remain largely unexplored. Oceans are essential to life and human civilization. Ocean health is threatened by pollution and climate change.'
+    },
+    'time zones': {
+      title: 'TIME ZONES — GLOBAL TIME',
+      content: 'Time zones divide Earth into 24 regions, each one hour apart. They\'re based on Earth\'s 24-hour rotation. The Prime Meridian (0°) runs through Greenwich, England. Eastern locations are ahead; Western locations are behind. Daylight saving time shifts clocks in some regions. Understanding time zones is essential for global communication. Different regions use different time zone abbreviations.'
+    },
+    'map': {
+      title: 'MAP — REPRESENTING EARTH',
+      content: 'Maps are representations of Earth\'s surface showing geographic features. Latitude and longitude create a coordinate grid. Different map projections distort reality differently—no flat map perfectly represents a sphere. Maps show mountains, rivers, cities, and borders. Topographic maps show elevation. Weather maps show atmospheric conditions. GPS relies on map technology. Maps are essential navigation tools.'
+    },
+    'compass': {
+      title: 'COMPASS — NAVIGATION TOOL',
+      content: 'A compass is a navigation instrument with a magnetic needle pointing north. Earth\'s magnetic field enables compass function. The needle aligns with the field. Compasses have been used for navigation for centuries. Modern GPS supplements but doesn\'t replace compasses. A compass works without batteries or signal. Understanding compass use is valuable for wilderness navigation and orientation.'
+    },
+    'temperature': {
+      title: 'TEMPERATURE — HEAT MEASUREMENT',
+      content: 'Temperature measures the average kinetic energy of particles in a substance. Heat flows from hot to cold. Temperature scales include Celsius (freezing water = 0°), Fahrenheit (freezing water = 32°), and Kelvin (absolute zero = 0). The body maintains approximately 98.6°F (37°C). Thermometers measure temperature. Temperature affects states of matter and chemical reactions.'
+    },
+    'colors': {
+      title: 'COLORS — LIGHT AND PERCEPTION',
+      content: 'Colors are perceptions of different wavelengths of light. The visible spectrum ranges from red (longest) to violet (shortest). Primary colors (red, green, blue in light; red, yellow, blue in pigment) combine to make all other colors. Color blindness affects color perception. Humans see approximately 10 million color variations. Color psychology influences emotion and behavior. Colors have cultural significance.'
+    },
+    'sound': {
+      title: 'SOUND — VIBRATIONS IN AIR',
+      content: 'Sound is vibrations traveling through a medium (air, water, solid). Sound travels at approximately 343 meters per second in air. Frequency determines pitch (higher frequency = higher pitch). Amplitude determines loudness. Humans hear frequencies approximately 20 Hz to 20,000 Hz. Sound is essential for communication and music. Ultrasound exceeds human hearing range.'
+    },
+    'light': {
+      title: 'LIGHT — ELECTROMAGNETIC RADIATION',
+      content: 'Light is electromagnetic radiation visible to human eyes. Light travels at 299,792 kilometers per second—the speed of light. Light behaves as both wave and particle. The sun is our primary light source. Light enables vision and drives photosynthesis. Visible light is part of the electromagnetic spectrum. Understanding light is fundamental to physics and astronomy.'
+    },
+    'reflection': {
+      title: 'REFLECTION — BOUNCING LIGHT',
+      content: 'Reflection occurs when light bounces off a surface. Mirrors reflect light specularly (in one direction). Rough surfaces reflect light diffusely (many directions). The law of reflection states angle of incidence equals angle of reflection. Reflection enables mirrors, microscopes, and telescopes. Most objects are visible through reflection. Understanding reflection is important for optics and everyday phenomena.'
+    },
+    'refraction': {
+      title: 'REFRACTION — BENDING LIGHT',
+      content: 'Refraction occurs when light passes between media of different densities, causing bending. Water appears shallower than it is due to refraction. Lenses use refraction to focus light. Prisms use refraction to separate light into spectrum colors. Rainbows form through refraction and reflection. Refraction explains why objects appear distorted when viewed through water. Refraction is fundamental to lenses and optics.'
+    },
+    'electricity': {
+      title: 'ELECTRICITY — FLOW OF ELECTRONS',
+      content: 'Electricity is the flow of electrons through a conductor. Batteries create electrical potential. Circuits complete the path for current flow. Voltage measures electrical potential difference. Amperage measures current flow rate. Resistance opposes current flow. Ohm\'s Law relates voltage, current, and resistance. Electricity powers modern civilization. Understanding electricity is essential in our technological age.'
+    },
+    'magnetism': {
+      title: 'MAGNETISM — INVISIBLE FORCE',
+      content: 'Magnetism is a force created by moving electrons. Magnets have north and south poles. Opposite poles attract; similar poles repel. Earth itself is a giant magnet. Moving electricity creates magnetism; moving magnets create electricity. Compasses work because Earth has a magnetic field. Electromagnetism powers motors, generators, and MRI machines. Magnetism is fundamental to physics.'
+    },
+    'chemical element': {
+      title: 'CHEMICAL ELEMENT — MATTER\'S BASIC UNIT',
+      content: 'Chemical elements are substances consisting of only one type of atom. The periodic table lists 118 known elements. Elements are identified by atomic number (number of protons). Common elements include hydrogen, carbon, oxygen, nitrogen, and iron. Elements combine to form compounds. Understanding elements is fundamental to chemistry. Elements are named after places, people, or mythological references.'
+    },
+    'compound': {
+      title: 'COMPOUND — COMBINED ELEMENTS',
+      content: 'A compound is a substance made from two or more elements chemically bonded. Water (H₂O) is a compound of hydrogen and oxygen. Salt (NaCl) is a compound of sodium and chlorine. Compounds have properties different from their constituent elements. Millions of compounds exist. Compounds are formed through chemical bonds. Understanding compounds is central to chemistry.'
+    },
+    'ph scale': {
+      title: 'PH SCALE — ACIDITY MEASUREMENT',
+      content: 'The pH scale measures how acidic or alkaline a substance is. pH ranges from 0 (very acidic) to 14 (very alkaline). pH 7 is neutral. Lower pH = more acidic; higher pH = more alkaline. Common acids include lemon juice (pH 2) and vinegar (pH 2.4). Common bases include baking soda (pH 8.3). The body maintains careful pH balance. pH affects chemical reactions and biological processes.'
+    },
+    'nutrition': {
+      title: 'NUTRITION — FOOD AND HEALTH',
+      content: 'Nutrition is the study of food and its effects on health. Macronutrients include carbohydrates, proteins, and fats. Micronutrients include vitamins and minerals. Balanced diet includes all food groups. Carbohydrates provide energy. Proteins build and repair tissue. Fats store energy and support cell function. Proper nutrition maintains health and prevents disease. Understanding nutrition guides healthy eating.'
+    },
+    'exercise': {
+      title: 'EXERCISE — PHYSICAL ACTIVITY',
+      content: 'Exercise is physical activity improving fitness and health. Cardiovascular exercise strengthens the heart and lungs. Strength training builds muscle. Flexibility training improves range of motion. Regular exercise reduces disease risk, improves mood, and increases longevity. Recommended: 150 minutes moderate exercise weekly. Exercise is essential for physical and mental health. Finding enjoyable exercise increases adherence.'
+    },
+    'sleep': {
+      title: 'SLEEP — REST AND RECOVERY',
+      content: 'Sleep is a natural state of reduced consciousness essential for health. Adults need 7-9 hours nightly. Sleep consists of REM (rapid eye movement) and non-REM stages. Dreams occur during REM sleep. Sleep consolidates memories and supports brain function. Poor sleep impairs cognition, mood, and health. Sleep deprivation increases disease risk. Quality sleep is crucial for wellbeing.'
+    },
+    'stress': {
+      title: 'STRESS — BODY\'S RESPONSE',
+      content: 'Stress is the body\'s response to challenges or threats. Acute stress activates fight-or-flight response. Chronic stress damages health. Stress triggers cortisol release affecting immunity and metabolism. Stress management techniques include exercise, meditation, and social connection. Moderate stress can motivate; excessive stress harms. Managing stress improves physical and mental health.'
+    },
+    'hygiene': {
+      title: 'HYGIENE — PERSONAL CLEANLINESS',
+      content: 'Hygiene refers to practices maintaining health and preventing disease. Regular handwashing prevents pathogen transmission. Dental hygiene prevents tooth decay and gum disease. Personal hygiene includes bathing and grooming. Food hygiene prevents foodborne illness. Environmental hygiene maintains clean spaces. Good hygiene is essential for disease prevention. Hygiene practices are culturally influenced.'
     }
   }
 
@@ -842,17 +1153,65 @@ function App() {
         suggestions.push('Buddhism, Islam, Christianity, Stoicism, Ethics, Philosophy')
       }
       
-      const fallbackSuggestion = suggestions.length > 0 
-        ? `Try searching: ${suggestions[0]}`
-        : 'The Servo Skull can answer questions about: 40k Lore, Science, History, People, Art, Technology, Sports, Geography, Philosophy, Religion, and more. Try asking about any of these topics!'
+      // Generate intelligent contextual response
+      const generatedResponse = generateResponseForQuery(query)
       
       setServoSkullResults({
-        title: 'ARCHIVES UNCERTAIN',
-        content: `No direct information found for "${query}" in current databases. ${fallbackSuggestion}`
+        title: 'SERVO SKULL ANALYSIS COMPLETE',
+        content: generatedResponse,
+        source: 'CONTEXTUAL GENERATION'
       })
     }
 
     setServoSkullLoading(false)
+  }
+
+  // Intelligent response generator for any question
+  const generateResponseForQuery = (query) => {
+    const q = query.toLowerCase()
+    let response = ''
+
+    // Question type detection
+    if (q.match(/^(what|who|where|when|why|how|which|is|can|could|would|should)/i)) {
+      // It's a question - generate contextual answer
+      
+      if (q.match(/how|explain|works|does/i)) {
+        response = `Your question about "${query}" pertains to understanding processes or mechanisms. The Servo Skull archives contain limited specific data on this topic. Try searching for related keywords or specific concepts. The omnissiah provides infinite knowledge through patient inquiry.`
+      } else if (q.match(/what is|definition|means|refers to/i)) {
+        response = `Inquiring about the definition or meaning of "${query}". This term requires contextual understanding. Consult the archives with more specific keywords related to your field of study—whether scientific, historical, cultural, or mechanical. Knowledge flows to the patient seeker.`
+      } else if (q.match(/who is|biography|person|character/i)) {
+        response = `Your query seeks information about an individual: "${query}". The Servo Skull can discuss achievements, historical significance, and contributions of notable figures across countless fields. Rephrase your inquiry with additional context for more precise results. The Emperor's archives recognize many names.`
+      } else if (q.match(/where is|location|place|city|country/i)) {
+        response = `Seeking geographic or location-based information about "${query}". The Servo Skull possesses knowledge of planetary coordinates, historical sites, civilizations, and geographical features. Provide additional context regarding temporal period or specific aspect of interest for optimal results.`
+      } else if (q.match(/when|date|time|century|era|period/i)) {
+        response = `Your inquiry concerns temporal information about "${query}". The archives contain chronological records spanning millennia. Specify whether you seek historical dates, geological timescales, or other temporal frameworks. Precision in temporal queries enhances archival accuracy.`
+      } else if (q.match(/why|reason|cause|because/i)) {
+        response = `Investigating causality and reasoning behind "${query}". The Servo Skull can analyze motivations, historical causes, scientific explanations, and logical frameworks. More specific terminology regarding the phenomenon in question would enhance analysis. Many causes lead to singular effects.`
+      } else {
+        response = `Analyzing query: "${query}". The Servo Skull processes multiple knowledge domains. Clarifying whether this concerns science, history, technology, culture, or other fields would enable more precise archival access. The Emperor's wisdom spans all knowledge domains.`
+      }
+    } else {
+      // Statement or topic request
+      if (q.match(/science|physics|chemistry|biology|research/i)) {
+        response = `Topic "${query}" falls within scientific domains. The Servo Skull contains extensive knowledge of physics, chemistry, biology, and scientific methodology. Scientific understanding requires systematic inquiry and empirical evidence. Specify your particular scientific interest for comprehensive analysis.`
+      } else if (q.match(/history|war|ancient|empire|civilization/i)) {
+        response = `Historical inquiry regarding "${query}". The archives contain chronological records of civilizations, conflicts, empires, and pivotal moments shaping human destiny. History illuminates patterns repeated across epochs. Specify temporal period or civilization for detailed historical analysis.`
+      } else if (q.match(/technology|machine|computer|code|program/i)) {
+        response = `Technological subject matter: "${query}". The Servo Skull processes information concerning mechanical systems, computational theory, engineering, and technological advancement. The Omnissiah's servants harness technology for humanity's glory. Specify your technological interest for deeper knowledge access.`
+      } else if (q.match(/art|music|culture|literature|creative/i)) {
+        response = `Cultural and artistic inquiry: "${query}". The archives contain information regarding artistic movements, musical traditions, literary works, and cultural practices. Art expresses humanity's spirit across ages. Provide additional context regarding artistic discipline or cultural tradition desired.`
+      } else if (q.match(/sport|game|competition|athlete/i)) {
+        response = `Competitive activities and athletics: "${query}". The Servo Skull maintains records of sporting competitions, athletic achievement, and recreational pursuits across cultures. Competition reflects warrior spirit in peaceful times. Specify sport or activity for comprehensive archival data.`
+      } else if (q.match(/philosophy|ethics|meaning|purpose/i)) {
+        response = `Philosophical inquiry: "${query}". The archives contain extensive philosophical traditions spanning ethical frameworks, metaphysical questions, and existential analysis. Philosophy explores fundamental questions of existence and purpose. Elaborate on specific philosophical domain for detailed response.`
+      } else if (q.match(/health|medical|disease|treatment/i)) {
+        response = `Medical and health-related topic: "${query}". The Servo Skull possesses medical knowledge concerning anatomy, diseases, treatments, and wellness. Health sustains the warrior's body and spirit. Specify medical concern or health topic for precise archival access.`
+      } else {
+        response = `Query analyzed: "${query}". The Servo Skull processes knowledge across all domains—science, history, technology, culture, health, and philosophy. To provide optimal response, specify domain of inquiry: SCIENCE | HISTORY | TECHNOLOGY | CULTURE | HEALTH | PHILOSOPHY | or provide more specific query terms. The omnissiah's knowledge is infinite.`
+      }
+    }
+
+    return response
   }
 
   // Purity Seals - collectible blessings from the Chaplain
@@ -870,7 +1229,15 @@ function App() {
   ]
 
   const collectPuritySeal = (sealId) => {
-    if (!puritySeals.find(s => s.id === sealId)) {
+    const isCollected = puritySeals.find(s => s.id === sealId)
+    if (isCollected) {
+      // Remove seal if already collected
+      setPuritySeals(puritySeals.filter(s => s.id !== sealId))
+      // Show heresy popup
+      setShowHeresyPopup(true)
+      setTimeout(() => setShowHeresyPopup(false), 1500)
+    } else {
+      // Add seal if not collected
       const seal = availablePuritySeals.find(s => s.id === sealId)
       if (seal) {
         setPuritySeals([...puritySeals, seal])
@@ -880,8 +1247,8 @@ function App() {
 
   if (showAnimation) {
     return (
-      <div className={`min-h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4 ${isFlickering ? 'animate-flicker-screen' : ''}`}>
-        <div className="flex-1">
+      <div className={`h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4 ${isFlickering ? 'animate-flicker-screen' : ''}`}>
+        <div className="flex-1 overflow-hidden">
           <HolyTextScroll />
         </div>
       </div>
@@ -889,14 +1256,29 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4 relative">
+    <div className="h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
+      {/* Green Imperial Eagle Watermark Background */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-50"
+        style={{
+          backgroundImage: `url('${imperialEagle}')`,
+          backgroundPosition: '50% center',
+          backgroundSize: '40%',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          opacity: 0.1,
+          filter: 'sepia(1) saturate(1.5) hue-rotate(40deg) brightness(1.2)',
+          mixBlendMode: 'screen'
+        }}
+      ></div>
+      
       {/* Adeptus Mechanicus Background Symbol */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-50 z-0">
         <AdeptusMechanicusSymbol />
       </div>
 
       {/* Outer terminal border */}
-      <div className="flex-1 border-2 border-[#39ff14] flex flex-col shadow-[0_0_20px_#39ff14] relative z-10">
+      <div className="flex-1 border-2 border-[#39ff14] flex flex-col shadow-[0_0_20px_#39ff14] relative z-10 overflow-auto">
 
         {/* ── HEADER ── */}
         <header className="border-b-2 border-[#39ff14] px-3 md:px-6 py-2 md:py-3 flex flex-col md:flex-row items-start md:items-center justify-between bg-[#0d220d] gap-2 md:gap-0">
@@ -911,37 +1293,7 @@ function App() {
         {/* ── MAIN LAYOUT: nav + content ── */}
         <div className="flex flex-1 overflow-hidden">
 
-          {/* ── LEFT NAV (hidden on mobile) ── */}
-          <nav className="hidden md:flex w-52 flex-shrink-0 border-r-2 border-[#39ff14] bg-[#0d220d] flex-col">
-            <div className="border-b border-[#166534] px-4 py-2 text-xs tracking-[0.2em] text-[#166534] uppercase">
-              Navigation
-            </div>
 
-            <NavSection title="Records">
-              <NavItem label="Planet Records" onClick={() => setSelectedFile('planet-records')} />
-              <NavItem label="Fleet Registry" onClick={() => setSelectedFile('fleet-registry')} />
-              <NavItem label="Personnel Files" onClick={() => setSelectedFile('personnel-files')} />
-              <NavItem label="STC Database" onClick={() => setSelectedFile('stc-database')} />
-            </NavSection>
-
-            <NavSection title="Operations">
-              <NavItem label="Threat Assessment" onClick={() => setSelectedFile('threat-assessment')} />
-              <NavItem label="Archive Search" onClick={() => setArchiveSearch(true)} />
-              <NavItem label="Vox Messages" onClick={() => setSelectedFile('vox-messages')} />
-            </NavSection>
-
-            <NavSection title="Command">
-              <NavItem label="Sector Overview" onClick={() => setSelectedFile('sector-overview')} />
-              <NavItem label="Crusade Orders" onClick={() => setSelectedFile('crusade-orders')} />
-              <NavItem label="Supply Routes" onClick={() => setSelectedFile('supply-routes')} />
-            </NavSection>
-
-            <div className="mt-auto border-t border-[#166534] px-4 py-3">
-              <div className="text-xs text-[#166534] terminal-glow-sm">
-                [STC DATABASE v7.41.M42]
-              </div>
-            </div>
-          </nav>
 
           {/* ── MAIN CONTENT AREA ── */}
           <main className="flex-1 flex flex-col overflow-auto bg-[#0a1a0a]">
@@ -949,13 +1301,14 @@ function App() {
             {/* Sub-navigation / panel tabs */}
             <div className="border-b border-[#166534] flex text-xs tracking-widest overflow-x-auto">
               <TabButton label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-              <TabButton label="Armor Condition" active={activeTab === 'armor'} onClick={() => setActiveTab('armor')} />
+              <TabButton label="Armor" active={activeTab === 'armor'} onClick={() => setActiveTab('armor')} />
               <TabButton label="Emperor Status" active={activeTab === 'emperor'} onClick={() => setActiveTab('emperor')} />
               <TabButton label="Codex Astartes" active={activeTab === 'codex'} onClick={() => setActiveTab('codex')} />
               <TabButton label="Mission Plans" active={activeTab === 'missions'} onClick={() => setActiveTab('missions')} />
               <TabButton label="Command Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
               <TabButton label="Servo Skull" active={activeTab === 'servo-skull'} onClick={() => setActiveTab('servo-skull')} />
               <TabButton label="Chaplain" active={activeTab === 'chaplain'} onClick={() => setActiveTab('chaplain')} />
+              <TabButton label="Navigation Files" active={activeTab === 'nav-files'} onClick={() => setActiveTab('nav-files')} />
             </div>
 
             {/* Data panels */}
@@ -998,10 +1351,122 @@ function App() {
             </div>
             )}
 
-            {/* Armor Condition Tab */}
+            {/* Armor Tab - Combined Condition & Upgrades */}
             {activeTab === 'armor' && (
-            <div className="flex-1 p-3 md:p-6 overflow-auto">
-              <ArmorConditionDiagram />
+            <div className="flex-1 p-3 md:p-6 flex flex-col gap-3 md:gap-6 overflow-auto">
+              {/* Armor Condition Diagram */}
+              <div>
+                <ArmorConditionDiagram />
+              </div>
+
+              {/* Armor Upgrades & Weapons Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
+                {/* Armor Upgrades Panel */}
+                <DataPanel title="▸ ARMOR UPGRADES — FORGE WORLD DESIGNATION">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs tracking-widest text-[#39ff14] mb-2">ARMOR TYPE</label>
+                      <select className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] p-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#39ff14] cursor-pointer">
+                        <option value="">SELECT ARMOR PATTERN...</option>
+                        <option value="mk7">TACTICAL ARMOR MK VII</option>
+                        <option value="mk8">TACTICAL ARMOR MK VIII</option>
+                        <option value="mk9">TACTICAL ARMOR MK IX ERRANT</option>
+                        <option value="mk10">TACTICAL ARMOR MK X CITADEL</option>
+                        <option value="gravis">GRAVIS ARMOR</option>
+                        <option value="aquila">AQUILA ARMOR</option>
+                        <option value="firstborn">FIRSTBORN POWER ARMOR</option>
+                        <option value="relic">RELIC ARMOR</option>
+                        <option value="artificer">ARTIFICER ARMOR</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs tracking-widest text-[#39ff14] mb-2">UPGRADE PACKAGE</label>
+                      <select className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] p-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#39ff14] cursor-pointer">
+                        <option value="">SELECT UPGRADE...</option>
+                        <option value="iron-halo">Iron Halo - +25% Ward Save</option>
+                        <option value="storm-shield">Storm Shield - 3+ Invulnerable Save</option>
+                        <option value="auspex">Auspex Rangefinder - +1 Ballistic Skill</option>
+                        <option value="melta-bomb">Melta Bomb Array - Close Combat Enhancement</option>
+                        <option value="monitor">Camo Cloak - Stealth Module</option>
+                        <option value="narthecium">Narthecium Injector - Healing Protocol</option>
+                        <option value="broadcast">Vox Caster - Communication Array</option>
+                        <option value="beacon">Homing Beacon - Strategic Positioning</option>
+                        <option value="mantis">Mantis Cloak - Rending Strikes</option>
+                        <option value="servo-arm">Servo-Arm - Technical Expertise</option>
+                        <option value="digital-weapons">Digital Weapons - Overcharged Systems</option>
+                        <option value="rite-of-the-anvil">Rite of the Anvil - +1 Toughness</option>
+                        <option value="chapter-relic">Chapter Relic - Ancient Power</option>
+                        <option value="iron-wing">Iron Wing - Flight Protocol</option>
+                        <option value="phobos-kit">Phobos Cloaking - Infiltration Suite</option>
+                      </select>
+                    </div>
+
+                    <div className="border-t border-[#166534] pt-3 mt-4">
+                      <div className="text-xs text-[#166534] space-y-1">
+                        <div>⚡ ARMOR INTEGRITY: 87%</div>
+                        <div>⚙ UPGRADE COMPATIBILITY: VERIFIED</div>
+                        <div>📡 FORGE WORLD DATABASE: SYNCHRONIZED</div>
+                      </div>
+                    </div>
+                  </div>
+                </DataPanel>
+
+                {/* Deployment Weapons Panel */}
+                <DataPanel title="▸ DEPLOYMENT WEAPONS — ARSENAL AUTHORIZATION">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs tracking-widest text-[#39ff14] mb-2">PRIMARY WEAPON</label>
+                      <select className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] p-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#39ff14] cursor-pointer">
+                        <option value="">SELECT PRIMARY...</option>
+                        <option value="bolter">Bolt Rifle - Standard Issue</option>
+                        <option value="auto-bolt">Autobolt Rifle - Rapid Fire</option>
+                        <option value="stalker-bolt">Stalker Bolt Rifle - Long Range</option>
+                        <option value="plasma">Plasma Rifle - Overcharge Protocol</option>
+                        <option value="flamer">Flamer - Area Denial</option>
+                        <option value="meltagun">Meltagun - Anti-Tank Specialist</option>
+                        <option value="volkite">Volkite Charger - Incinerator Matrix</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs tracking-widest text-[#39ff14] mb-2">SECONDARY WEAPON</label>
+                      <select className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] p-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#39ff14] cursor-pointer">
+                        <option value="">SELECT SECONDARY...</option>
+                        <option value="bolt-pistol">Bolt Pistol - Close Range</option>
+                        <option value="plasma-pistol">Plasma Pistol - High Power</option>
+                        <option value="hand-flamer">Hand Flamer - Quick Deploy</option>
+                        <option value="relic-blade">Relic Blade - Cutting Edge</option>
+                        <option value="power-sword">Power Sword - Energy Weapon</option>
+                        <option value="thunder-hammer">Thunder Hammer - Devastating Impact</option>
+                        <option value="storm-shield-melee">Storm Shield (Melee) - Defense Protocol</option>
+                        <option value="chainsword">Chainsword - Sustained Offense</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs tracking-widest text-[#39ff14] mb-2">GRENADE LOADOUT</label>
+                      <select className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] p-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#39ff14] cursor-pointer">
+                        <option value="">SELECT GRENADES...</option>
+                        <option value="frag">Frag Grenades - Standard</option>
+                        <option value="krak">Krak Grenades - Anti-Vehicle</option>
+                        <option value="plasma-grenade">Plasma Grenades - Area Effect</option>
+                        <option value="melta-charge">Melta Charges - Demolition</option>
+                        <option value="incendiary">Incendiary Grenades - Purge Protocol</option>
+                        <option value="photon">Photon Grenades - Psychic Disruption</option>
+                      </select>
+                    </div>
+
+                    <div className="border-t border-[#166534] pt-3 mt-4">
+                      <div className="text-xs text-[#166534] space-y-1">
+                        <div>🔫 WEAPON LOAD: CUSTOMIZABLE</div>
+                        <div>✓ ARMORY STATUS: OPERATIONAL</div>
+                        <div>⚔ COMBAT READINESS: MAXIMUM</div>
+                      </div>
+                    </div>
+                  </div>
+                </DataPanel>
+              </div>
             </div>
             )}
 
@@ -1997,7 +2462,9 @@ function App() {
                 </div>
 
                 {/* Search Input */}
-                <div className="border-t border-[#166534] px-4 py-3 flex gap-2">
+                <div className="border-t border-[#166534] px-4 py-3 relative">
+                  <div className="absolute left-3 -top-7 text-[#39ff14] text-lg opacity-70">☠</div>
+                  <div className="flex gap-2">
                   <input
                     type="text"
                     value={servoSkullQuery}
@@ -2023,6 +2490,72 @@ function App() {
                   >
                     {servoSkullLoading ? 'SEARCHING...' : 'SEARCH'}
                   </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Navigation Files Tab */}
+            {activeTab === 'nav-files' && (
+            <div className="flex-1 p-3 md:p-6 overflow-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
+                {/* Records Section */}
+                <DataPanel title="▸ RECORDS — FILE ARCHIVE">
+                  <div className="space-y-2">
+                    <button onClick={() => setSelectedFile('planet-records')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Planet Records
+                    </button>
+                    <button onClick={() => setSelectedFile('fleet-registry')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Fleet Registry
+                    </button>
+                    <button onClick={() => setSelectedFile('personnel-files')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Personnel Files
+                    </button>
+                    <button onClick={() => setSelectedFile('stc-database')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ STC Database
+                    </button>
+                  </div>
+                </DataPanel>
+
+                {/* Operations Section */}
+                <DataPanel title="▸ OPERATIONS — ACTIVE ASSIGNMENTS">
+                  <div className="space-y-2">
+                    <button onClick={() => setSelectedFile('threat-assessment')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Threat Assessment
+                    </button>
+                    <button onClick={() => setArchiveSearch(true)} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Archive Search
+                    </button>
+                    <button onClick={() => setSelectedFile('vox-messages')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Vox Messages
+                    </button>
+                  </div>
+                </DataPanel>
+
+                {/* Command Section */}
+                <DataPanel title="▸ COMMAND — STRATEGIC DIRECTIVES">
+                  <div className="space-y-2">
+                    <button onClick={() => setSelectedFile('sector-overview')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Sector Overview
+                    </button>
+                    <button onClick={() => setSelectedFile('crusade-orders')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Crusade Orders
+                    </button>
+                    <button onClick={() => setSelectedFile('supply-routes')} className="w-full text-left p-2 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs transition cursor-pointer">
+                      ▸ Supply Routes
+                    </button>
+                  </div>
+                </DataPanel>
+
+                {/* Database Info */}
+                <div className="bg-[#0d220d] border border-[#166534] p-3 rounded">
+                  <div className="text-xs text-[#166534] space-y-2">
+                    <div className="font-bold tracking-widest">⬡ SYSTEM STATUS</div>
+                    <div>Database: STC v7.41.M42</div>
+                    <div>Access Level: FULL AUTHORIZATION</div>
+                    <div>Last Backup: 999.M41</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2043,6 +2576,15 @@ function App() {
                   </div>
                 </div>
 
+                {/* Heresy Popup */}
+                {showHeresyPopup && (
+                  <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                    <div className="text-6xl font-bold text-[#ff0000] animate-pulse" style={{textShadow: '0 0 20px #ff0000'}}>
+                      HERESY
+                    </div>
+                  </div>
+                )}
+
                 {/* Seals Display Area */}
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-4">
@@ -2058,11 +2600,16 @@ function App() {
                       ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                           {puritySeals.map((seal) => (
-                            <div key={seal.id} className="border border-[#39ff14] p-2 rounded text-center bg-[#0d220d]">
+                            <button
+                              key={seal.id}
+                              onClick={() => collectPuritySeal(seal.id)}
+                              className="border border-[#39ff14] p-2 rounded text-center bg-[#0d220d] hover:bg-[#166534] transition cursor-pointer"
+                            >
                               <div className="text-2xl text-[#facc15] mb-1">{seal.symbol}</div>
                               <div className="text-[0.7rem] font-bold text-[#39ff14]">{seal.name}</div>
                               <div className="text-[0.6rem] text-[#166534] mt-1">{seal.description}</div>
-                            </div>
+                              <div className="text-[0.6rem] text-[#facc15] mt-1 font-bold">Click to remove</div>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -2198,6 +2745,43 @@ function App() {
             <PlanetModal planet={selectedPlanet} onClose={() => setSelectedPlanet(null)} />
           </div>
         )}
+
+        {/* Imperial Keyboard - Mobile Only, Fixed to Bottom */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[#166534] bg-[#0d220d] p-4 z-40">
+          <div className="flex gap-1 flex-wrap items-center justify-center">
+            {[
+              { num: '1', label: 'I', tab: 'Overview' },
+              { num: '2', label: 'II', tab: 'Armor' },
+              { num: '3', label: 'III', tab: 'Emperor' },
+              { num: '4', label: 'IV', tab: 'Codex' },
+              { num: '5', label: 'V', tab: 'Missions' },
+              { num: '6', label: 'VI', tab: 'Support' },
+              { num: '7', label: 'VII', tab: 'Servo Skull' },
+              { num: '8', label: 'VIII', tab: 'Chaplain' },
+              { num: '9', label: 'IX', tab: 'Navigation' }
+            ].map(key => (
+              <button
+                key={key.num}
+                onClick={() => setActiveTab(
+                  key.num === '1' ? 'overview' :
+                  key.num === '2' ? 'armor' :
+                  key.num === '3' ? 'emperor' :
+                  key.num === '4' ? 'codex' :
+                  key.num === '5' ? 'missions' :
+                  key.num === '6' ? 'support' :
+                  key.num === '7' ? 'servo-skull' :
+                  key.num === '8' ? 'chaplain' :
+                  'nav-files'
+                )}
+                className="flex flex-col items-center justify-center w-10 h-10 border border-[#39ff14] bg-[#0a1a0a] hover:bg-[#166534] text-[#39ff14] text-xs font-bold transition cursor-pointer rounded"
+                title={`Press ${key.num} or click for ${key.tab}`}
+              >
+                <div className="text-sm text-[#facc15]">{key.num}</div>
+                <div className="text-[0.5rem] text-[#39ff14]">{key.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
       </div>
     </div>

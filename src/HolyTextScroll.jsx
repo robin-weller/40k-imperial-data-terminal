@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './HolyTextScroll.css';
 
 const HolyTextScroll = () => {
   const [displayedText, setDisplayedText] = useState('');
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [userInput, setUserInput] = useState('');
+  const scrollRef = useRef(null);
 
   const holyText = `
 ╔════════════════════════════════════════════════════════════════════════════════╗
@@ -116,18 +119,50 @@ Long live the Golden Throne.
         currentIndex++;
       } else {
         clearInterval(typingInterval);
+        setIsTypingComplete(true);
       }
-    }, 15); // Adjust speed: lower = faster, higher = slower
+    }, 2); // Adjust speed: lower = faster, higher = slower
 
     return () => clearInterval(typingInterval);
   }, [holyText]);
 
+  // Auto-scroll to bottom as text is typed
+  useEffect(() => {
+    if (scrollRef.current) {
+      // Use setTimeout to ensure DOM has updated before scrolling
+      const scrollTimer = setTimeout(() => {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }, 0);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [displayedText]);
+
   return (
-    <div className="holy-text-container">
-      <div className="holy-text-scroll">
+    <div className="holy-text-container flex flex-col">
+      <div ref={scrollRef} className="holy-text-scroll flex-1">
         {displayedText}
-        <span className="typing-cursor">_</span>
+        {!isTypingComplete && <span className="typing-cursor">_</span>}
       </div>
+      {isTypingComplete && (
+        <div className="border-t-2 border-[#39ff14] p-2 bg-[#0d220d]">
+          <div className="flex items-center gap-2">
+            <span className="text-[#39ff14] text-sm">COMMAND_:</span>
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setUserInput('')
+                }
+              }}
+              autoFocus
+              className="flex-1 bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] px-2 py-1 text-sm font-mono focus:outline-none"
+              placeholder="Enter command..."
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
