@@ -1117,6 +1117,28 @@ function App() {
   const handleServoSkullSearch = async (query) => {
     if (!query.trim()) return
 
+    // Check if query is "232" - forbidden code
+    if (query.trim() === '232') {
+      setServoSkullResults({
+        title: 'WE DO NOT SPEAK OF TITUS',
+        content: '',
+        source: ''
+      })
+      setServoSkullLoading(false)
+      return
+    }
+
+    // Check if query mentions Titus - forbidden subject
+    if (query.toLowerCase().includes('titus')) {
+      setServoSkullResults({
+        title: 'ErRoR cOdE 232',
+        content: '',
+        source: ''
+      })
+      setServoSkullLoading(false)
+      return
+    }
+
     setServoSkullLoading(true)
 
     // Clean up query - remove common questions words
@@ -2645,8 +2667,16 @@ function App() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="border-l-2 border-[#39ff14] pl-3 py-2">
-                        <div className="text-sm font-bold text-[#39ff14] mb-2">
+                      <div className={`border-l-2 pl-3 py-2 ${
+                        servoSkullResults.title === 'ErRoR cOdE 232' || servoSkullResults.title === 'WE DO NOT SPEAK OF TITUS'
+                          ? 'border-red-500'
+                          : 'border-[#39ff14]'
+                      }`}>
+                        <div className={`text-sm font-bold mb-2 ${
+                          servoSkullResults.title === 'ErRoR cOdE 232' || servoSkullResults.title === 'WE DO NOT SPEAK OF TITUS'
+                            ? 'text-red-500'
+                            : 'text-[#39ff14]'
+                        }`}>
                           {servoSkullResults.title}
                         </div>
                         {servoSkullResults.source && (
