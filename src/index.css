@@ -103,3 +103,24 @@ body::after {
 *::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+/* Mobile text formatting */
+@media (max-width: 768px) {
+  /* Reduce letter spacing on mobile for better text wrapping */
+  .tracking-widest {
+    letter-spacing: 0.05em;
+  }
+  
+  /* Ensure text wraps properly */
+  body {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  /* Tab bar scroll properly on mobile */
+  .border-b {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+}

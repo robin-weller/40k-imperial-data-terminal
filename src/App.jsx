@@ -1303,7 +1303,7 @@ function App() {
           <main className="flex-1 flex flex-col overflow-auto bg-[#0a1a0a]">
 
             {/* Sub-navigation / panel tabs */}
-            <div className="border-b border-[#166534] flex text-xs tracking-widest overflow-x-auto">
+            <div className="border-b border-[#166534] flex text-xs tracking-widest overflow-x-auto overflow-y-hidden md:overflow-x-visible">
               <TabButton label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
               <TabButton label="Armor" active={activeTab === 'armor'} onClick={() => setActiveTab('armor')} />
               <TabButton label="Emperor Status" active={activeTab === 'emperor'} onClick={() => setActiveTab('emperor')} />
@@ -1357,7 +1357,7 @@ function App() {
 
             {/* Armor Tab - Combined Condition & Upgrades */}
             {activeTab === 'armor' && (
-            <div className="flex-1 p-3 md:p-6 flex flex-col gap-3 md:gap-6 overflow-auto">
+            <div className="flex-1 p-3 md:p-6 flex flex-col gap-3 md:gap-6 overflow-y-auto overflow-x-hidden">
               {/* Armor Condition Diagram */}
               <div>
                 <ArmorConditionDiagram />
@@ -2825,7 +2825,7 @@ function TabButton({ label, active, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 border-r border-[#166534] cursor-pointer transition-colors ${
+      className={`px-2 md:px-4 py-2 border-r border-[#166534] cursor-pointer transition-colors whitespace-nowrap text-xs md:text-sm ${
         active
           ? 'bg-[#1a3a1a] text-[#39ff14] terminal-glow'
           : 'text-[#166534] hover:bg-[#0d220d] hover:text-[#39ff14]'
@@ -2839,19 +2839,19 @@ function TabButton({ label, active, onClick }) {
 function DataPanel({ title, children }) {
   return (
     <div className="border border-[#166534] bg-[#0d220d] flex flex-col">
-      <div className="border-b border-[#166534] px-4 py-2 text-sm tracking-widest terminal-glow-sm uppercase">
+      <div className="border-b border-[#166534] px-3 md:px-4 py-2 text-xs md:text-sm tracking-widest terminal-glow-sm uppercase">
         {title}
       </div>
-      <div className="p-4 flex-1">{children}</div>
+      <div className="p-3 md:p-4 flex-1">{children}</div>
     </div>
   )
 }
 
 function DataRow({ label, value, alert }) {
   return (
-    <div className="flex justify-between py-1 border-b border-[#0d220d] text-sm">
-      <span className="text-[#166534] uppercase tracking-wider text-xs">{label}</span>
-      <span className={alert ? 'text-yellow-400 terminal-glow' : 'text-[#39ff14]'}>{value}</span>
+    <div className="flex justify-between py-1 border-b border-[#0d220d] text-xs md:text-sm gap-2">
+      <span className="text-[#166534] uppercase tracking-wider text-[0.7rem] md:text-xs flex-shrink-0">{label}</span>
+      <span className={`text-right flex-shrink-0 ${alert ? 'text-yellow-400 terminal-glow' : 'text-[#39ff14]'}`}>{value}</span>
     </div>
   )
 }
