@@ -31,6 +31,7 @@ function App() {
   const [titusPasswordError, setTitusPasswordError] = useState(false)
   const [passwordError, setPasswordError] = useState(false)
   const tabRefs = useRef({})
+  const chatMessagesRef = useRef(null)
 
   useEffect(() => {
     if (showAnimation) {
@@ -127,6 +128,15 @@ function App() {
     window.addEventListener('keydown', handleTabShortcut)
     return () => window.removeEventListener('keydown', handleTabShortcut)
   }, [isInputFocused])
+
+  // Auto-scroll chat messages to bottom
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      setTimeout(() => {
+        chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight
+      }, 0)
+    }
+  }, [chatMessages])
 
   // Scroll active tab into view
   useEffect(() => {
@@ -2534,7 +2544,7 @@ function App() {
                 </div>
 
                 {/* Chat Messages Area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div ref={chatMessagesRef} className="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col justify-end">
                   {chatMessages.map((msg) => (
                     <div key={msg.id} className={`text-xs font-mono ${msg.sender === 'AI_COMMAND' ? 'text-[#39ff14]' : 'text-[#facc15]'}`}>
                       <div className="text-[#166534] text-[0.65rem] mb-1">
