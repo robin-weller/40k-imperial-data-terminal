@@ -3,7 +3,9 @@ import HolyTextScroll from './HolyTextScroll.jsx'
 import imperialEagle from './assets/imperial-eagle.png'
 
 function App() {
-  const [showAnimation, setShowAnimation] = useState(true)
+  const [showPasswordScreen, setShowPasswordScreen] = useState(true)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [showAnimation, setShowAnimation] = useState(false)
   const [isFlickering, setIsFlickering] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const [archiveSearch, setArchiveSearch] = useState(false)
@@ -1255,6 +1257,89 @@ function App() {
         setPuritySeals([...puritySeals, seal])
       }
     }
+  }
+
+  if (showPasswordScreen) {
+    return (
+      <div className="h-screen bg-[#0a1a0a] text-[#39ff14] font-mono flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        {/* Green Imperial Eagle Watermark Background */}
+        <div 
+          className="fixed inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: `url('${imperialEagle}')`,
+            backgroundPosition: '50% center',
+            backgroundSize: '60%',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+            opacity: 0.08,
+            filter: 'sepia(1) saturate(1.5) hue-rotate(40deg) brightness(1.2)',
+            mixBlendMode: 'screen'
+          }}
+        ></div>
+
+        <div className="border-2 border-[#39ff14] p-8 md:p-12 w-full max-w-md relative z-10 shadow-[0_0_20px_#39ff14] bg-[#0a1a0a]">
+          <div className="text-center mb-8">
+            <div className="text-2xl md:text-3xl tracking-widest font-bold terminal-glow mb-2">
+              ⬡ IMPERIAL ACCESS TERMINAL
+            </div>
+            <div className="text-xs tracking-widest text-[#166534]">
+              AUTHORIZATION REQUIRED
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs tracking-widest text-[#39ff14] mb-2">
+                ACCESS CODE
+              </label>
+              <input
+                type="text"
+                value={'*'.repeat(passwordInput.length)}
+                onChange={(e) => {
+                  const newDisplayLength = e.target.value.length
+                  const oldLength = passwordInput.length
+                  
+                  if (newDisplayLength > oldLength) {
+                    // User typed more characters
+                    setPasswordInput(passwordInput + 'x')
+                  } else if (newDisplayLength < oldLength) {
+                    // User deleted characters
+                    setPasswordInput(passwordInput.slice(0, newDisplayLength))
+                  }
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && passwordInput.trim()) {
+                    setShowPasswordScreen(false)
+                    setShowAnimation(true)
+                  }
+                }}
+                placeholder="Enter access code..."
+                className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] placeholder-[#166534] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#39ff14] focus:ring-opacity-50"
+                autoFocus
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                if (passwordInput.trim()) {
+                  setShowPasswordScreen(false)
+                  setShowAnimation(true)
+                }
+              }}
+              disabled={!passwordInput.trim()}
+              className="w-full bg-[#39ff14] text-[#0a1a0a] px-4 py-2 font-bold tracking-wider uppercase text-sm hover:bg-[#facc15] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              AUTHENTICATE
+            </button>
+
+            <div className="text-center text-[0.65rem] text-[#166534] mt-4 tracking-wider">
+              SECURED ACCESS LEVEL: ALPHA<br/>
+              BIOMETRIC VERIFICATION ACTIVE
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (showAnimation) {
