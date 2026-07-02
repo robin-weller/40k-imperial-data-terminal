@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import HolyTextScroll from './HolyTextScroll.jsx'
 import imperialEagle from './assets/imperial-eagle.png'
 
@@ -22,6 +22,7 @@ function App() {
   const [puritySeals, setPuritySeals] = useState([])
   const [showHeresyPopup, setShowHeresyPopup] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const tabRefs = useRef({})
 
   useEffect(() => {
     if (showAnimation) {
@@ -84,6 +85,13 @@ function App() {
     window.addEventListener('keydown', handleTabShortcut)
     return () => window.removeEventListener('keydown', handleTabShortcut)
   }, [showAnimation, archiveSearch, isInputFocused])
+
+  // Scroll active tab into view
+  useEffect(() => {
+    if (tabRefs.current[activeTab]) {
+      tabRefs.current[activeTab].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }, [activeTab])
 
   const handleAIChat = (userMessage) => {
     const userMsg = {
@@ -1304,15 +1312,15 @@ function App() {
 
             {/* Sub-navigation / panel tabs */}
             <div className="border-b border-[#166534] flex text-xs tracking-widest overflow-x-auto overflow-y-hidden md:overflow-x-visible">
-              <TabButton label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-              <TabButton label="Armor" active={activeTab === 'armor'} onClick={() => setActiveTab('armor')} />
-              <TabButton label="Emperor Status" active={activeTab === 'emperor'} onClick={() => setActiveTab('emperor')} />
-              <TabButton label="Codex Astartes" active={activeTab === 'codex'} onClick={() => setActiveTab('codex')} />
-              <TabButton label="Mission Plans" active={activeTab === 'missions'} onClick={() => setActiveTab('missions')} />
-              <TabButton label="Command Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} />
-              <TabButton label="Servo Skull" active={activeTab === 'servo-skull'} onClick={() => setActiveTab('servo-skull')} />
-              <TabButton label="Chaplain" active={activeTab === 'chaplain'} onClick={() => setActiveTab('chaplain')} />
-              <TabButton label="Navigation Files" active={activeTab === 'nav-files'} onClick={() => setActiveTab('nav-files')} />
+              <TabButton label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} tabRef={(el) => tabRefs.current.overview = el} />
+              <TabButton label="Armor" active={activeTab === 'armor'} onClick={() => setActiveTab('armor')} tabRef={(el) => tabRefs.current.armor = el} />
+              <TabButton label="Emperor Status" active={activeTab === 'emperor'} onClick={() => setActiveTab('emperor')} tabRef={(el) => tabRefs.current.emperor = el} />
+              <TabButton label="Codex Astartes" active={activeTab === 'codex'} onClick={() => setActiveTab('codex')} tabRef={(el) => tabRefs.current.codex = el} />
+              <TabButton label="Mission Plans" active={activeTab === 'missions'} onClick={() => setActiveTab('missions')} tabRef={(el) => tabRefs.current.missions = el} />
+              <TabButton label="Command Support" active={activeTab === 'support'} onClick={() => setActiveTab('support')} tabRef={(el) => tabRefs.current.support = el} />
+              <TabButton label="Servo Skull" active={activeTab === 'servo-skull'} onClick={() => setActiveTab('servo-skull')} tabRef={(el) => tabRefs.current['servo-skull'] = el} />
+              <TabButton label="Chaplain" active={activeTab === 'chaplain'} onClick={() => setActiveTab('chaplain')} tabRef={(el) => tabRefs.current.chaplain = el} />
+              <TabButton label="Navigation Files" active={activeTab === 'nav-files'} onClick={() => setActiveTab('nav-files')} tabRef={(el) => tabRefs.current['nav-files'] = el} />
             </div>
 
             {/* Data panels */}
@@ -2820,9 +2828,10 @@ function NavItem({ label, onClick }) {
   )
 }
 
-function TabButton({ label, active, onClick }) {
+function TabButton({ label, active, onClick, tabRef }) {
   return (
     <button
+      ref={tabRef}
       type="button"
       onClick={onClick}
       className={`px-2 md:px-4 py-2 border-r border-[#166534] cursor-pointer transition-colors whitespace-nowrap text-xs md:text-sm ${
