@@ -26,6 +26,10 @@ function App() {
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [chaplainCoords, setChaplainCoords] = useState({ x: 145.1, y: 82.1, distance: 3.2, direction: 'NORTH' })
   const [tacMapPositions, setTacMapPositions] = useState({ userPos: { row: 2, col: 2 }, chaplainPos: { row: 0, col: 2 } })
+  const [showTitusPasswordModal, setShowTitusPasswordModal] = useState(false)
+  const [titusPassword, setTitusPassword] = useState('')
+  const [titusPasswordError, setTitusPasswordError] = useState(false)
+  const [passwordError, setPasswordError] = useState(false)
   const tabRefs = useRef({})
 
   useEffect(() => {
@@ -61,12 +65,46 @@ function App() {
     }
   }, [isFlickering])
 
+  // Reset input focus when password screen closes
+  useEffect(() => {
+    if (!showPasswordScreen) {
+      setIsInputFocused(false)
+    }
+  }, [showPasswordScreen])
+
+  // Reset input focus when Titus modal closes
+  useEffect(() => {
+    if (!showTitusPasswordModal) {
+      setIsInputFocused(false)
+    }
+  }, [showTitusPasswordModal])
+
+  // Reset input focus when archive search closes
+  useEffect(() => {
+    if (!archiveSearch) {
+      setIsInputFocused(false)
+    }
+  }, [archiveSearch])
+
+  // Reset input focus when file modal closes
+  useEffect(() => {
+    if (!selectedFile) {
+      setIsInputFocused(false)
+    }
+  }, [selectedFile])
+
+  // Reset input focus when planet modal closes
+  useEffect(() => {
+    if (!selectedPlanet) {
+      setIsInputFocused(false)
+    }
+  }, [selectedPlanet])
+
   // Tab number shortcuts
   useEffect(() => {
     const handleTabShortcut = (e) => {
-      if (showAnimation) return // Don't trigger during bootup
-      if (archiveSearch) return // Don't trigger when search is open
-      if (isInputFocused) return // Don't trigger when any input is focused
+      // Only prevent hotkeys when focus is actively in a text input field
+      if (isInputFocused) return
       
       const tabMap = {
         '1': 'overview',
@@ -88,7 +126,7 @@ function App() {
     
     window.addEventListener('keydown', handleTabShortcut)
     return () => window.removeEventListener('keydown', handleTabShortcut)
-  }, [showAnimation, archiveSearch, isInputFocused])
+  }, [isInputFocused])
 
   // Scroll active tab into view
   useEffect(() => {
@@ -1326,19 +1364,29 @@ function App() {
           }}
         ></div>
 
-        <div className="border-2 border-[#39ff14] p-8 md:p-12 w-full max-w-md relative z-10 shadow-[0_0_20px_#39ff14] bg-[#0a1a0a]">
+        <div className={`border-2 p-8 md:p-12 w-full max-w-md relative z-10 ${
+          passwordError 
+            ? 'border-red-500 shadow-[0_0_20px_rgb(239,68,68)] bg-red-950' 
+            : 'border-[#39ff14] shadow-[0_0_20px_#39ff14] bg-[#0a1a0a]'
+        }`}>
           <div className="text-center mb-8">
-            <div className="text-2xl md:text-3xl tracking-widest font-bold terminal-glow mb-2">
+            <div className={`text-2xl md:text-3xl tracking-widest font-bold terminal-glow mb-2 ${
+              passwordError ? 'text-red-500' : 'text-[#39ff14]'
+            }`}>
               ⬡ IMPERIAL ACCESS TERMINAL
             </div>
-            <div className="text-xs tracking-widest text-[#166534]">
-              AUTHORIZATION REQUIRED
+            <div className={`text-xs tracking-widest ${
+              passwordError ? 'text-red-600' : 'text-[#166534]'
+            }`}>
+              {passwordError ? 'AUTHORIZATION FAILED' : 'AUTHORIZATION REQUIRED'}
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs tracking-widest text-[#39ff14] mb-2">
+              <label className={`block text-xs tracking-widest mb-2 ${
+                passwordError ? 'text-red-500' : 'text-[#39ff14]'
+              }`}>
                 ACCESS CODE
               </label>
               <input
@@ -1355,15 +1403,23 @@ function App() {
                     // User deleted characters
                     setPasswordInput(passwordInput.slice(0, newDisplayLength))
                   }
+                  setPasswordError(false)
                 }}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' && passwordInput.trim()) {
                     setShowPasswordScreen(false)
                     setShowAnimation(true)
+                    setPasswordError(false)
                   }
                 }}
                 placeholder="Enter access code..."
-                className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] placeholder-[#166534] px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#39ff14] focus:ring-opacity-50"
+                className={`w-full px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-opacity-50 border ${
+                  passwordError
+                    ? 'bg-red-950 border-red-500 text-red-500 placeholder-red-700 focus:ring-2 focus:ring-red-500'
+                    : 'bg-[#0a1a0a] border-[#39ff14] text-[#39ff14] placeholder-[#166534] focus:ring-2 focus:ring-[#39ff14]'
+                }`}
                 autoFocus
               />
             </div>
@@ -1371,17 +1427,37 @@ function App() {
             <button
               onClick={() => {
                 if (passwordInput.trim()) {
+                  // Validate password - requires IMPERIAL
+                  if (passwordInput.length !== 8 || !passwordInput.endsWith('xxxxxxxx')) { // IMPERIAL has 8 chars
+                    setPasswordError(true)
+                    setPasswordInput('')
+                    return
+                  }
                   setShowPasswordScreen(false)
                   setShowAnimation(true)
+                  setPasswordError(false)
                 }
               }}
               disabled={!passwordInput.trim()}
-              className="w-full bg-[#39ff14] text-[#0a1a0a] px-4 py-2 font-bold tracking-wider uppercase text-sm hover:bg-[#facc15] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full px-4 py-2 font-bold tracking-wider uppercase text-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                passwordError
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-[#39ff14] text-[#0a1a0a] hover:bg-[#facc15]'
+              }`}
             >
               AUTHENTICATE
             </button>
 
-            <div className="text-center text-[0.65rem] text-[#166534] mt-4 tracking-wider">
+            {passwordError && (
+              <div className="text-center text-[0.65rem] text-red-500 mt-2 tracking-wider">
+                ACCESS DENIED<br/>
+                INVALID CREDENTIALS
+              </div>
+            )}
+
+            <div className={`text-center text-[0.65rem] mt-4 tracking-wider ${
+              passwordError ? 'text-red-600' : 'text-[#166534]'
+            }`}>
               SECURED ACCESS LEVEL: ALPHA<br/>
               BIOMETRIC VERIFICATION ACTIVE
             </div>
@@ -2668,6 +2744,19 @@ function App() {
                   </div>
                 </DataPanel>
 
+                {/* Restricted Files Section */}
+                <DataPanel title="▸ RESTRICTED — INQUISITORIAL SEALS">
+                  <div className="space-y-2">
+                    <button onClick={() => setShowTitusPasswordModal(true)} className="w-full text-left p-2 border border-[#facc15] bg-[#0d220d] hover:bg-[#331a00] text-[#facc15] text-xs transition cursor-pointer font-bold">
+                      ⚠ TITUS - DON'T OPEN ⚠
+                    </button>
+                    <div className="text-[0.65rem] text-[#facc15] italic">
+                      WARNING: HERESY INVESTIGATION FILE
+                      OPENING WITHOUT CLEARANCE IS A CAPITAL OFFENSE
+                    </div>
+                  </div>
+                </DataPanel>
+
                 {/* Operations Section */}
                 <DataPanel title="▸ OPERATIONS — ACTIVE ASSIGNMENTS">
                   <div className="space-y-2">
@@ -2876,6 +2965,128 @@ function App() {
         </footer>
 
         {/* Modal Overlay */}
+        {/* Titus Password Modal */}
+        {showTitusPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className={`border-2 p-6 w-full max-w-sm ${
+              titusPasswordError 
+                ? 'bg-red-950 border-red-500 shadow-[0_0_30px_rgb(239,68,68)]' 
+                : 'bg-[#0a1a0a] border-[#facc15] shadow-[0_0_30px_#facc15]'
+            }`}>
+              <div className="text-center mb-6">
+                <div className={`text-lg tracking-widest font-bold mb-2 ${
+                  titusPasswordError ? 'text-red-500' : 'text-[#facc15]'
+                }`}>
+                  ⚠ RESTRICTED ACCESS ⚠
+                </div>
+                <div className={`text-xs ${
+                  titusPasswordError ? 'text-red-600' : 'text-[#166534]'
+                }`}>
+                  {titusPasswordError ? 'ACCESS DENIED' : 'INQUISITORIAL CLEARANCE REQUIRED'}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className={`block text-xs tracking-widest mb-2 ${
+                    titusPasswordError ? 'text-red-500' : 'text-[#facc15]'
+                  }`}>
+                    AUTHORIZATION CODE
+                  </label>
+                  <input
+                    type="text"
+                    maxLength="3"
+                    value={'*'.repeat(titusPassword.length)}
+                    onChange={(e) => {
+                      const newDisplayLength = e.target.value.length
+                      const oldLength = titusPassword.length
+                      
+                      if (newDisplayLength > oldLength) {
+                        // User typed more characters
+                        setTitusPassword(titusPassword + e.target.value.slice(-1).replace(/[^0-9]/g, '0'))
+                      } else if (newDisplayLength < oldLength) {
+                        // User deleted characters
+                        setTitusPassword(titusPassword.slice(0, newDisplayLength))
+                      }
+                      setTitusPasswordError(false)
+                    }}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && titusPassword.length === 3) {
+                        if (titusPassword === '232') {
+                          setSelectedFile('titus-dont-open')
+                          setShowTitusPasswordModal(false)
+                          setTitusPassword('')
+                          setTitusPasswordError(false)
+                        } else {
+                          setTitusPasswordError(true)
+                          setTitusPassword('')
+                        }
+                      }
+                    }}
+                    placeholder="***"
+                    className={`w-full border-2 px-3 py-2 text-sm font-mono focus:outline-none text-center tracking-[0.3em] ${
+                      titusPasswordError 
+                        ? 'bg-red-950 border-red-500 text-red-500 placeholder-red-700' 
+                        : 'bg-[#0a1a0a] border-[#facc15] text-[#facc15] placeholder-[#166534]'
+                    }`}
+                    autoFocus
+                  />
+                </div>
+
+                {titusPasswordError && (
+                  <div className="text-xs text-red-500 text-center font-bold">
+                    INVALID CODE — AUTHORIZATION FAILED
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (titusPassword === '232') {
+                        setSelectedFile('titus-dont-open')
+                        setShowTitusPasswordModal(false)
+                        setTitusPassword('')
+                        setTitusPasswordError(false)
+                      } else {
+                        setTitusPasswordError(true)
+                        setTitusPassword('')
+                      }
+                    }}
+                    disabled={titusPassword.length !== 3}
+                    className={`flex-1 px-4 py-2 font-bold tracking-wider uppercase text-xs transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                      titusPasswordError
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'bg-[#facc15] text-[#0a1a0a] hover:bg-white'
+                    }`}
+                  >
+                    VERIFY
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTitusPasswordModal(false)
+                      setTitusPassword('')
+                      setTitusPasswordError(false)
+                    }}
+                    className={`flex-1 border px-4 py-2 font-bold tracking-wider uppercase text-xs transition ${
+                      titusPasswordError
+                        ? 'border-red-500 text-red-500 hover:bg-red-900'
+                        : 'border-[#facc15] text-[#facc15] hover:bg-[#1a3a1a]'
+                    }`}
+                  >
+                    CANCEL
+                  </button>
+                </div>
+
+                <div className="text-center text-[0.6rem] text-[#166534] mt-4">
+                  [FAILURE WILL TRIGGER SECURITY PROTOCOLS]
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {selectedFile && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <FileModal file={selectedFile} onClose={() => setSelectedFile(null)} />
@@ -3923,6 +4134,172 @@ May we never forget the knowledge of the Dark Age of Technology.
 [ARCHIVE SEALED BY ORDER OF FORGE-MASTER TERTIUS]
 [OMNISSIAH PROTECTS THIS DATABASE]
       `
+    },
+    'titus-dont-open': {
+      title: 'CAPTAIN TITUS — SEALED INVESTIGATION FILE',
+      timestamp: '999.M42',
+      content: `
+[INQUISITORIAL SEAL — LEVEL 9 CLASSIFICATION]
+[RESTRICTED: INQUISITOR LEVEL CLEARANCE ONLY]
+[WARNING: HERESY INVESTIGATION IN PROGRESS]
+
+CONFIDENTIAL PERSONNEL DOSSIER — CAPTAIN TITUS CAESARIUS
+ULTRAMARINE BATTLE COMPANY — ARMAGEDDON CAMPAIGN
+INVESTIGATION STATUS: ACTIVE — FLAGGED FOR HERESY INQUIRY
+
+═══════════════════════════════════════════════════════════
+
+SUBJECT IDENTIFICATION:
+Name: Titus Caesarius
+Rank: Captain, Ultramarines Space Marines
+Age: 112 Years Standard (Combat Age: 94 Years)
+Genetic Lineage: Primarch Roboute Guilliman (Suspected Trace)
+Status: DETAINED FOR QUESTIONING
+
+═══════════════════════════════════════════════════════════
+
+COMBAT RECORD — EXEMPLARY:
+
+Armageddon Campaign Performance (998.M41)
+- Personal Kill Count: 2,847 Confirmed Xenos
+- Leadership: Led 12 Critical Defensive Positions
+- Casualty Rate (Under Command): 23% (Exceptionally Low)
+- Commendations: VALOR IN THE FACE OF OVERWHELMING ODDS
+
+Previous Battle Records:
+- Graia Campaign: Single-Handedly Defended Forge
+- Forge World Incidents: Survived 7+ Catastrophic Events
+- Daemon Encounters: Survived MULTIPLE Demonic Possessions
+- Warp Exposure: UNUSUAL RESISTANCE DOCUMENTED
+
+═══════════════════════════════════════════════════════════
+
+HERESY INVESTIGATION SUMMARY — CRITICAL CONCERNS:
+
+INCIDENT #1 — WARP RESISTANCE ANOMALY
+During Armageddon campaign, Captain Titus exposed to intense warp 
+energies. Standard Imperium physiology should result in:
+- Immediate Daemonic Possession: LIKELIHOOD 99.7%
+- Death/Corruption: LIKELIHOOD 99.2%
+- Mental Degradation: LIKELIHOOD 98.9%
+
+OBSERVED RESULT: Captain Titus Remained Lucid and Functional
+EXPLANATION PROVIDED: "Space Marine Training, Peak Physical Condition"
+INQUISITORIAL ASSESSMENT: INSUFFICIENT — Possible Heretical Pact?
+
+INCIDENT #2 — PROHIBITED PSYKER INTERACTION
+Subject reported collaborating with Adeptus Astartes Psyker.
+Standard Protocol: Psykers maintained at arm's length (Contamination Risk)
+OBSERVED BEHAVIOR: Casual Physical Contact, No Protection Worn
+INQUISITORIAL ASSESSMENT: WILLFUL DISREGARD FOR IMPERIUM LAW
+
+INCIDENT #3 — DAEMON WEAPONS PROFICIENCY
+Captain Titus demonstrated extraordinary combat capability against 
+Chaos Forces. Weapons specialists note:
+- Fighting Style: Optimized for Daemon Combat
+- Tactical Approach: "Too Perfect for Human Comprehension"
+- Weapon Resonance: UNUSUAL AFFINITY WITH TAINTED ARMAMENTS
+INQUISITORIAL ASSESSMENT: Possible Chaos Cult Training?
+
+INCIDENT #4 — MULTIPLE DAEMON POSSESSIONS (SURVIVED)
+Military Records Indicate:
+- Possession Event #1 (999.M41): SURVIVED — No Explanation
+- Possession Event #2 (999.M41): SURVIVED AGAIN — Highly Irregular
+- Possession Event #3 (999.M41): SURVIVED THIRD TIME
+
+Standard Possessed Imperial Personnel: EXECUTE IMMEDIATELY
+Subject's Repeated Survival: UNPRECEDENTED
+INQUISITORIAL ASSESSMENT: Possible Voluntary Daemonic Pact?
+
+═══════════════════════════════════════════════════════════
+
+PSYCHOLOGICAL EVALUATION — RED FLAGS:
+
+1. HERETICAL PHILOSOPHY
+   - Questions Authority of High Lords
+   - Suggests Space Marine Autonomy Superior to Imperium Law
+   - Promotes "Personal Strength" Over "Emperor's Will"
+
+2. WARP AFFINITY
+   - Describes Warp Energy with Unusual Comfort
+   - "Like Coming Home" — Recorded Statement
+   - Possible Corruption of the Mind?
+
+3. INSUBORDINATION
+   - Refused Direct Orders from Inquisition
+   - Attempted to Resist Detention (Multiple Security Breaches)
+   - Displayed Superhuman Strength (Broke 3 Restraints)
+
+4. CHAOS TENDENCIES
+   - Advocates for "Strength Through Struggle"
+   - Rejects Traditional Space Marine Dogma
+   - Claims Individual Merit Above Chapter Hierarchy
+
+═══════════════════════════════════════════════════════════
+
+EVIDENCE OF POSSIBLE HERESY:
+
+THEORY #1 — CHAOS CULT AFFILIATE
+Possibility: Captain Titus secretly worships Chaos God(s)
+Evidence: Daemon Resistance, Philosophical Deviations
+Likelihood: 34%
+
+THEORY #2 — DAEMONIC POSSESSION (HIDDEN)
+Possibility: Titus is Possessed, Hiding True Nature
+Evidence: Multiple Survivals, Unusual Warp Affinity
+Likelihood: 27%
+
+THEORY #3 — IMPERIAL DESERTER
+Possibility: Titus Plans Betrayal of Space Marine Chapter
+Evidence: Insubordination, Rejection of Authority
+Likelihood: 19%
+
+THEORY #4 — XENOS HYBRID CREATION
+Possibility: Titus is Corrupted Xenos/Human Hybrid
+Evidence: Superhuman Abilities, Philosophical Alienation
+Likelihood: 12%
+
+THEORY #5 — INNOCENT BUT INSUFFICIENTLY LOYAL
+Possibility: Titus is Merely an Independent Thinker
+Evidence: Exceptional Combat Record, Strong Battle Performance
+Likelihood: 8%
+
+═══════════════════════════════════════════════════════════
+
+INQUISITORIAL RECOMMENDATION:
+
+PRIORITY ACTION: IMMEDIATE EXECUTION
+Reasoning: In the Grim Darkness of the Far Future, there is only war
+— and there is NO ROOM for unproven warriors who may harbor Chaos.
+Better to lose one questionable Space Marine than risk planetary 
+infection by hidden Heresy.
+
+Captain Titus Must Be:
+1. Interrogated Further Under Extreme Measures
+2. Mind-Scanned by Astropaths (Risk of Corruption)
+3. Cleansed Through Holy Fire if Contamination Confirmed
+4. Returned to Emperor's Judgment (Execution)
+
+═══════════════════════════════════════════════════════════
+
+PERSONAL NOTES FROM INQUISITOR SERVO (CLASSIFIED):
+
+"Something is wrong with Captain Titus. Too strong. Too 
+independent. Too... unsuitable for the rigid hierarchy of the 
+Imperium. Whether he is fallen to Chaos or simply evolved beyond 
+our understanding, the result is the same: HE MUST NOT SURVIVE.
+
+The Emperor's enemies are everywhere. Chaos walks in human form.
+Trust no one who questions the System. Even if they question it 
+only with their actions and not their words."
+
+[SEAL OF THE HOLY INQUISITION]
+[ENDORSED BY INQUISITOR SERVO]
+[FURTHER INVESTIGATION ONGOING]
+[EXECUTION PENDING FINAL APPROVAL]
+
+[END CLASSIFIED FILE — DO NOT DISTRIBUTE]
+      `
     }
   }
 
@@ -4604,6 +4981,12 @@ function ArchiveSearchModal({ searchQuery, setSearchQuery, searchCategory, setSe
           placeholder="Search archive... (e.g., 'Ultramarines', 'Carnifex', 'Bolter')"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => {
+            // Note: setIsInputFocused not available in this modal, but the parent hotkey handler checks archiveSearch flag
+          }}
+          onBlur={() => {
+            // Note: setIsInputFocused not available in this modal, but the parent hotkey handler checks archiveSearch flag
+          }}
           className="w-full bg-[#0a1a0a] border border-[#39ff14] text-[#39ff14] px-3 py-2 focus:outline-none text-sm font-mono"
         />
       </div>
