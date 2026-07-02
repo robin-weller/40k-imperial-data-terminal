@@ -24,6 +24,8 @@ function App() {
   const [puritySeals, setPuritySeals] = useState([])
   const [showHeresyPopup, setShowHeresyPopup] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const [chaplainCoords, setChaplainCoords] = useState({ x: 145.1, y: 82.1, distance: 3.2, direction: 'NORTH' })
+  const [tacMapPositions, setTacMapPositions] = useState({ userPos: { row: 2, col: 2 }, chaplainPos: { row: 0, col: 2 } })
   const tabRefs = useRef({})
 
   useEffect(() => {
@@ -94,6 +96,53 @@ function App() {
       tabRefs.current[activeTab].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     }
   }, [activeTab])
+
+  // Generate random chaplain location and tactical map positions on mount
+  useEffect(() => {
+    const userX = 145.2
+    const userY = 78.9
+    
+    // Generate random chaplain coordinates within a reasonable range
+    const chaplainX = parseFloat((140 + Math.random() * 20).toFixed(1))
+    const chaplainY = parseFloat((70 + Math.random() * 40).toFixed(1))
+    
+    // Calculate distance using Pythagorean theorem
+    const dx = chaplainX - userX
+    const dy = chaplainY - userY
+    const distance = parseFloat(Math.sqrt(dx * dx + dy * dy).toFixed(1))
+    
+    // Determine direction based on coordinates
+    let direction = 'UNKNOWN'
+    if (Math.abs(dy) > Math.abs(dx)) {
+      direction = dy > 0 ? 'NORTH' : 'SOUTH'
+    } else {
+      direction = dx > 0 ? 'EAST' : 'WEST'
+    }
+    
+    setChaplainCoords({
+      x: chaplainX,
+      y: chaplainY,
+      distance,
+      direction
+    })
+
+    // Generate random tactical map positions (5x5 grid)
+    const userRow = Math.floor(Math.random() * 5)
+    const userCol = Math.floor(Math.random() * 5)
+    let chaplainRow = Math.floor(Math.random() * 5)
+    let chaplainCol = Math.floor(Math.random() * 5)
+    
+    // Ensure chaplain and user are not at the same position
+    while (chaplainRow === userRow && chaplainCol === userCol) {
+      chaplainRow = Math.floor(Math.random() * 5)
+      chaplainCol = Math.floor(Math.random() * 5)
+    }
+    
+    setTacMapPositions({
+      userPos: { row: userRow, col: userCol },
+      chaplainPos: { row: chaplainRow, col: chaplainCol }
+    })
+  }, [])
 
   const handleAIChat = (userMessage) => {
     const userMsg = {
@@ -2762,11 +2811,21 @@ function App() {
                         <div className="border border-[#166534] p-2 bg-[#0a1a0a] font-mono text-[0.65rem] leading-tight">
                           <div className="text-[#39ff14] font-bold mb-1">TACTICAL MAP</div>
                           <div className="space-y-0 text-[#166534]">
-                            <div>. . C . . </div>
-                            <div>. . . . . </div>
-                            <div>. . Y . . </div>
-                            <div>. . . . . </div>
-                            <div>. . . . . </div>
+                            {[0, 1, 2, 3, 4].map((row) => (
+                              <div key={row}>
+                                {[0, 1, 2, 3, 4].map((col) => {
+                                  let cell = '. '
+                                  if (row === tacMapPositions.userPos.row && col === tacMapPositions.userPos.col) {
+                                    cell = <span key={col} className="text-[#39ff14]">Y </span>
+                                  } else if (row === tacMapPositions.chaplainPos.row && col === tacMapPositions.chaplainPos.col) {
+                                    cell = <span key={col} className="text-[#facc15]">C </span>
+                                  } else {
+                                    cell = <span key={col}>. </span>
+                                  }
+                                  return cell
+                                })}
+                              </div>
+                            ))}
                           </div>
                           <div className="text-[#166534] text-[0.6rem] mt-1">
                             <span className="text-[#39ff14]">Y</span> = You | <span className="text-[#facc15]">C</span> = Chaplain
@@ -2788,8 +2847,8 @@ function App() {
                           <div className="font-bold">CHAPLAIN LOCATION</div>
                           <div className="text-[0.7rem] text-[#166534] mt-1">
                             <div>Sector: 7-Green</div>
-                            <div>Coordinates: 145.1, 82.1</div>
-                            <div>Distance: ~3.2m NORTH</div>
+                            <div>Coordinates: {chaplainCoords.x}, {chaplainCoords.y}</div>
+                            <div>Distance: ~{chaplainCoords.distance}m {chaplainCoords.direction}</div>
                           </div>
                         </div>
                       </div>
