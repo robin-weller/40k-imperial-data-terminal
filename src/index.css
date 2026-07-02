@@ -93,3 +93,13 @@ body::after {
 .terminal-glow-sm {
   text-shadow: 0 0 4px #39ff14;
 }
+
+/* Hide scrollbars on all devices */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
