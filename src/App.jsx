@@ -1427,12 +1427,6 @@ function App() {
             <button
               onClick={() => {
                 if (passwordInput.trim()) {
-                  // Validate password - requires IMPERIAL
-                  if (passwordInput.length !== 8 || !passwordInput.endsWith('xxxxxxxx')) { // IMPERIAL has 8 chars
-                    setPasswordError(true)
-                    setPasswordInput('')
-                    return
-                  }
                   setShowPasswordScreen(false)
                   setShowAnimation(true)
                   setPasswordError(false)
